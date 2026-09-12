@@ -196,11 +196,13 @@
 }
 
 .hero-btn {
+  display: inline-block;
   padding: 12px 20px;
   border-radius: 9999px;
   font-size: 13px;
   font-weight: 500;
   line-height: 1;
+  text-decoration: none;
 }
 
 .hero-btn-primary {

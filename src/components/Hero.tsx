@@ -1,5 +1,7 @@
 import { motion } from 'motion/react'
 import { Plus } from 'lucide-react'
+import { Link } from 'react-router'
+import { hero, site, type Cta } from '../content/site.ts'
 import './Hero.css'
 
 const EASE = [0.16, 1, 0.3, 1] as const
@@ -41,6 +43,28 @@ function GridIcon() {
   )
 }
 
+function CtaButton({ cta, className }: { cta: Cta; className: string }) {
+  if (!cta.href) {
+    return (
+      <button type="button" className={className}>
+        {cta.label}
+      </button>
+    )
+  }
+  if (/^https?:\/\//.test(cta.href)) {
+    return (
+      <a href={cta.href} className={className}>
+        {cta.label}
+      </a>
+    )
+  }
+  return (
+    <Link to={cta.href} className={className}>
+      {cta.label}
+    </Link>
+  )
+}
+
 function Hero() {
   return (
     <section className="hero">
@@ -51,10 +75,10 @@ function Hero() {
         transition={{ duration: 0.8, ease: EASE }}
       >
         <div className="hero-nav-left">
-          <a href="/" className="hero-logo" aria-label="NeuralKinetics home">
+          <Link to="/" className="hero-logo" aria-label={`${site.name} home`}>
             <LogoIcon />
-            <span className="hero-brand">NeuralKinetics</span>
-          </a>
+            <span className="hero-brand">{site.name}</span>
+          </Link>
 
           <button type="button" className="hero-menu-btn">
             <span className="hero-menu-circle">
@@ -64,8 +88,9 @@ function Hero() {
           </button>
 
           <div className="hero-tags-pill">
-            <span>Advanced Bionics</span>
-            <span>Cognitive AI</span>
+            {hero.navTags.map((tag) => (
+              <span key={tag}>{tag}</span>
+            ))}
           </div>
         </div>
 
@@ -74,11 +99,11 @@ function Hero() {
             <button
               type="button"
               className="hero-grid-btn"
-              aria-label="Adaptive Systems"
+              aria-label={hero.navAction}
             >
               <GridIcon />
             </button>
-            <span className="hero-right-label">Adaptive Systems</span>
+            <span className="hero-right-label">{hero.navAction}</span>
           </div>
         </div>
       </motion.nav>
@@ -111,7 +136,7 @@ function Hero() {
             transition={{ duration: 0.8, delay: 0.6, ease: EASE }}
           >
             <span className="hero-dot" />
-            Best digital banking card 2026
+            {hero.eyebrow}
           </motion.p>
 
           <motion.h1
@@ -120,9 +145,9 @@ function Hero() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.8, ease: EASE }}
           >
-            One Card, Zero
+            {hero.headline[0]}
             <br />
-            Limits. Worldwide.
+            {hero.headline[1]}
           </motion.h1>
 
           <motion.div
@@ -131,19 +156,23 @@ function Hero() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 1.0, ease: EASE }}
           >
-            <button type="button" className="hero-btn hero-btn-primary">
-              See Features
-            </button>
-            <button type="button" className="hero-btn hero-btn-outline">
-              How It Works
-            </button>
+            <CtaButton
+              cta={hero.primaryCta}
+              className="hero-btn hero-btn-primary"
+            />
+            <CtaButton
+              cta={hero.secondaryCta}
+              className="hero-btn hero-btn-outline"
+            />
           </motion.div>
         </div>
 
         <div className="hero-footer-right">
-          <span className="hero-tag">Neuromorphic</span>
-          <span className="hero-tag">AGI</span>
-          <span className="hero-tag">Cybernetics</span>
+          {hero.capabilities.map((tag) => (
+            <span key={tag} className="hero-tag">
+              {tag}
+            </span>
+          ))}
         </div>
       </motion.div>
     </section>

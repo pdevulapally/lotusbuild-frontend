@@ -1,6 +1,8 @@
-# lotusbuild-frontend
+# LotusBuild frontend
 
-Minimal black-and-white hero landing page built with React 19, Vite, TypeScript, React Router and `motion`.
+Marketing site for LotusBuild — a development platform for planning, building, previewing and iterating on real applications from one workspace. Built with React 19, Vite, TypeScript, React Router and `motion`.
+
+Site copy lives in `src/content/site.ts`; components read from it rather than hardcoding strings.
 
 ## Scripts
 
