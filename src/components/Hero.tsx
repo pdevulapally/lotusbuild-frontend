@@ -1,13 +1,9 @@
 import { motion } from 'motion/react'
-import { Plus } from 'lucide-react'
 import { Link } from 'react-router'
 import { hero, site, type Cta } from '../content/site.ts'
 import './Hero.css'
 
 const EASE = [0.16, 1, 0.3, 1] as const
-
-const VIDEO_URL =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_215831_c6a8989c-d716-4d8d-8745-e972a2eec711.mp4'
 
 function LogoIcon() {
   return (
@@ -80,13 +76,6 @@ function Hero() {
             <span className="hero-brand">{site.name}</span>
           </Link>
 
-          <button type="button" className="hero-menu-btn">
-            <span className="hero-menu-circle">
-              <Plus size={12} strokeWidth={3} />
-            </span>
-            <span className="hero-menu-label">Menu</span>
-          </button>
-
           <div className="hero-tags-pill">
             {hero.navTags.map((tag) => (
               <span key={tag}>{tag}</span>
@@ -107,20 +96,6 @@ function Hero() {
           </div>
         </div>
       </motion.nav>
-
-      <div className="hero-video-wrap">
-        <motion.video
-          className="hero-video"
-          src={VIDEO_URL}
-          autoPlay
-          muted
-          playsInline
-          loop
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.8, ease: EASE }}
-        />
-      </div>
 
       <motion.div
         className="hero-footer"
