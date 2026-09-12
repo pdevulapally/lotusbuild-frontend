@@ -16,10 +16,9 @@
   left: 0;
   right: 0;
   z-index: 50;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
   padding: 16px;
   pointer-events: none;
 }
@@ -29,10 +28,23 @@
 }
 
 .hero-nav-left,
+.hero-nav-center,
 .hero-nav-right {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.hero-nav-left {
+  justify-content: flex-start;
+}
+
+.hero-nav-center {
+  justify-content: center;
+}
+
+.hero-nav-right {
+  justify-content: flex-end;
 }
 
 .hero-logo {
@@ -63,33 +75,18 @@
   color: #000;
 }
 
-.hero-right-pill {
-  display: flex;
+.hero-login-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px;
-  border-radius: 9999px;
-  background: #f4f4f6;
-}
-
-.hero-grid-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+  height: 36px;
+  padding: 0 16px;
   border: none;
-  border-radius: 50%;
+  border-radius: 9999px;
   background: #000;
-  padding: 0;
-}
-
-.hero-right-label {
-  display: none;
-  padding-right: 12px;
+  color: #fff;
   font-size: 11px;
   font-weight: 500;
-  color: #000;
+  text-decoration: none;
 }
 
 /* Footer */
@@ -193,7 +190,6 @@
 @media (min-width: 768px) {
   .hero-nav {
     padding: 24px 32px;
-    gap: 12px;
   }
 
   .hero-nav-left,
@@ -201,8 +197,7 @@
     gap: 12px;
   }
 
-  .hero-brand,
-  .hero-right-label {
+  .hero-brand {
     display: inline;
   }
 
@@ -211,9 +206,9 @@
     height: 40px;
   }
 
-  .hero-grid-btn {
-    width: 32px;
-    height: 32px;
+  .hero-login-btn {
+    height: 40px;
+    padding: 0 18px;
   }
 
   .hero-footer {

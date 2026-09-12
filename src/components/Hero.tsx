@@ -22,23 +22,6 @@ function LogoIcon() {
   )
 }
 
-function GridIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 12 12"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="3" cy="3" r="1.5" fill="#fff" />
-      <circle cx="9" cy="3" r="1.5" fill="#fff" />
-      <circle cx="3" cy="9" r="1.5" fill="#fff" />
-      <circle cx="9" cy="9" r="1.5" fill="#fff" />
-    </svg>
-  )
-}
-
 function CtaButton({ cta, className }: { cta: Cta; className: string }) {
   if (!cta.href) {
     return (
@@ -75,7 +58,9 @@ function Hero() {
             <LogoIcon />
             <span className="hero-brand">{site.name}</span>
           </Link>
+        </div>
 
+        <div className="hero-nav-center">
           <div className="hero-tags-pill">
             {hero.navTags.map((tag) => (
               <span key={tag}>{tag}</span>
@@ -84,16 +69,7 @@ function Hero() {
         </div>
 
         <div className="hero-nav-right">
-          <div className="hero-right-pill">
-            <button
-              type="button"
-              className="hero-grid-btn"
-              aria-label={hero.navAction}
-            >
-              <GridIcon />
-            </button>
-            <span className="hero-right-label">{hero.navAction}</span>
-          </div>
+          <CtaButton cta={hero.loginCta} className="hero-login-btn" />
         </div>
       </motion.nav>
 

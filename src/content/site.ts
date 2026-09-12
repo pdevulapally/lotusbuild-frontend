@@ -17,6 +17,6 @@ export const hero = {
   primaryCta: { label: 'Start building' } satisfies Cta,
   secondaryCta: { label: 'See how it works' } satisfies Cta,
   navTags: ['Real code', 'Live preview'],
-  navAction: 'Plan · Build · Preview · Publish',
+  loginCta: { label: 'Log in' } satisfies Cta,
   capabilities: ['Real code', 'Live preview', 'Conversational iteration'],
 } as const
