@@ -83,21 +83,19 @@ function Hero() {
         </div>
       </motion.nav>
 
-      <motion.div
-        className="hero-video-wrap"
-        initial={{ opacity: 0, scale: 1.05 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.8, ease: EASE }}
-      >
-        <video
+      <div className="hero-video-wrap">
+        <motion.video
           className="hero-video"
           src={VIDEO_URL}
           autoPlay
           muted
           playsInline
           loop
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.8, ease: EASE }}
         />
-      </motion.div>
+      </div>
 
       <motion.div
         className="hero-footer"
