@@ -208,17 +208,17 @@ function WorkspacePreview() {
 
     for (let i = 1; i <= prompt.length; i += 1) {
       timers.current.push(
-        window.setTimeout(() => setTyped(prompt.slice(0, i)), 14 * i),
+        window.setTimeout(() => setTyped(prompt.slice(0, i)), 38 * i),
       )
     }
-    const afterPrompt = 14 * prompt.length + 250
+    const afterPrompt = 38 * prompt.length + 450
 
     for (let i = 0; i < code.length; i += 1) {
       timers.current.push(
-        window.setTimeout(() => setVisibleLines(i + 1), afterPrompt + i * 110),
+        window.setTimeout(() => setVisibleLines(i + 1), afterPrompt + i * 175),
       )
     }
-    const afterCode = afterPrompt + code.length * 110 + 650
+    const afterCode = afterPrompt + code.length * 175 + 1600
     timers.current.push(window.setTimeout(() => setTab('preview'), afterCode))
 
     return () => {
@@ -231,7 +231,7 @@ function WorkspacePreview() {
     if (paused) return undefined
     const id = window.setTimeout(
       () => setActive((a) => (a + 1) % PROJECTS.length),
-      8200,
+      10500,
     )
     return () => window.clearTimeout(id)
   }, [active, paused])
@@ -249,7 +249,7 @@ function WorkspacePreview() {
       onMouseLeave={() => setPaused(false)}
       initial={{ y: 28, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 1, delay: 1.1, ease: EASE }}
+      transition={{ duration: 0.7, delay: 0.45, ease: EASE }}
     >
       <div className="wp-bar">
         <div className="wp-dots" aria-hidden="true">
