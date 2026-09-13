@@ -12,11 +12,10 @@ export const site = {
 } as const
 
 export const hero = {
-  eyebrow: 'AI software builder',
-  headline: ['Turn ideas into', 'working software.'],
+  headline:
+    'LotusBuild is the workspace that turns your ideas into working software.',
   primaryCta: { label: 'Start building' } satisfies Cta,
   secondaryCta: { label: 'See how it works' } satisfies Cta,
   navTags: ['Real code', 'Live preview'],
   loginCta: { label: 'Log in' } satisfies Cta,
-  capabilities: ['Real code', 'Live preview', 'Conversational iteration'],
 } as const

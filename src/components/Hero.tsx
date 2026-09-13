@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import { Link } from 'react-router'
 import { hero, site, type Cta } from '../content/site.ts'
+import HeroDemo from './demo/HeroDemo.tsx'
 import './Hero.css'
 
 const EASE = [0.16, 1, 0.3, 1] as const
@@ -22,37 +23,50 @@ function LogoIcon() {
   )
 }
 
-function CtaButton({ cta, className }: { cta: Cta; className: string }) {
+function CtaButton({
+  cta,
+  className,
+  icon,
+}: {
+  cta: Cta
+  className: string
+  icon?: string
+}) {
+  const content = (
+    <>
+      {cta.label}
+      {icon && (
+        <span className="hero-btn-icon" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+    </>
+  )
   if (!cta.href) {
     return (
       <button type="button" className={className}>
-        {cta.label}
+        {content}
       </button>
     )
   }
   if (/^https?:\/\//.test(cta.href)) {
     return (
       <a href={cta.href} className={className}>
-        {cta.label}
+        {content}
       </a>
     )
   }
   return (
     <Link to={cta.href} className={className}>
-      {cta.label}
+      {content}
     </Link>
   )
 }
 
 function Hero() {
   return (
-    <section className="hero">
-      <motion.nav
-        className="hero-nav"
-        initial={{ y: -16, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: EASE }}
-      >
+    <>
+      <header className="hero-nav">
         <div className="hero-nav-left">
           <Link to="/" className="hero-logo" aria-label={`${site.name} home`}>
             <LogoIcon />
@@ -71,62 +85,41 @@ function Hero() {
         <div className="hero-nav-right">
           <CtaButton cta={hero.loginCta} className="hero-login-btn" />
         </div>
-      </motion.nav>
+      </header>
 
-      <motion.div
-        className="hero-footer"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1, delay: 0.5, ease: EASE }}
-      >
-        <div className="hero-footer-left">
-          <motion.p
-            className="hero-subtitle"
-            initial={{ y: 16, opacity: 0 }}
+      <section className="hero">
+        <div className="hero-container">
+          <motion.div
+            className="hero-intro"
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6, ease: EASE }}
+            transition={{ duration: 0.7, ease: EASE }}
           >
-            <span className="hero-dot" />
-            {hero.eyebrow}
-          </motion.p>
-
-          <motion.h1
-            className="hero-heading"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8, ease: EASE }}
-          >
-            {hero.headline[0]}
-            <br />
-            {hero.headline[1]}
-          </motion.h1>
+            <h1 className="hero-heading">{hero.headline}</h1>
+            <div className="hero-actions">
+              <CtaButton
+                cta={hero.primaryCta}
+                className="hero-btn hero-btn-primary"
+                icon="→"
+              />
+              <CtaButton
+                cta={hero.secondaryCta}
+                className="hero-btn hero-btn-secondary"
+              />
+            </div>
+          </motion.div>
 
           <motion.div
-            className="hero-actions"
-            initial={{ y: 16, opacity: 0 }}
+            className="hero-media"
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.0, ease: EASE }}
+            transition={{ duration: 0.9, delay: 0.15, ease: EASE }}
           >
-            <CtaButton
-              cta={hero.primaryCta}
-              className="hero-btn hero-btn-primary"
-            />
-            <CtaButton
-              cta={hero.secondaryCta}
-              className="hero-btn hero-btn-outline"
-            />
+            <HeroDemo />
           </motion.div>
         </div>
-
-        <div className="hero-footer-right">
-          {hero.capabilities.map((tag) => (
-            <span key={tag} className="hero-tag">
-              {tag}
-            </span>
-          ))}
-        </div>
-      </motion.div>
-    </section>
+      </section>
+    </>
   )
 }
 
