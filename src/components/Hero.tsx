@@ -51,9 +51,9 @@ function Hero() {
         transition={{ duration: 0.8, ease: EASE }}
       >
         <div className="hero-nav-left">
-          <a href="/" className="hero-logo" aria-label="NeuralKinetics home">
+          <a href="/" className="hero-logo" aria-label="LotusBuild home">
             <LogoIcon />
-            <span className="hero-brand">NeuralKinetics</span>
+            <span className="hero-brand">LotusBuild</span>
           </a>
 
           <button type="button" className="hero-menu-btn">
@@ -64,8 +64,8 @@ function Hero() {
           </button>
 
           <div className="hero-tags-pill">
-            <span>Advanced Bionics</span>
-            <span>Cognitive AI</span>
+            <span>Plan &amp; build</span>
+            <span>Preview &amp; ship</span>
           </div>
         </div>
 
@@ -74,11 +74,11 @@ function Hero() {
             <button
               type="button"
               className="hero-grid-btn"
-              aria-label="Adaptive Systems"
+              aria-label="Workspace"
             >
               <GridIcon />
             </button>
-            <span className="hero-right-label">Adaptive Systems</span>
+            <span className="hero-right-label">Workspace</span>
           </div>
         </div>
       </motion.nav>
@@ -111,7 +111,7 @@ function Hero() {
             transition={{ duration: 0.8, delay: 0.6, ease: EASE }}
           >
             <span className="hero-dot" />
-            Best digital banking card 2026
+            AI software builder
           </motion.p>
 
           <motion.h1
@@ -120,9 +120,9 @@ function Hero() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.8, ease: EASE }}
           >
-            One Card, Zero
+            Turn ideas into
             <br />
-            Limits. Worldwide.
+            working software.
           </motion.h1>
 
           <motion.div
@@ -132,18 +132,18 @@ function Hero() {
             transition={{ duration: 0.8, delay: 1.0, ease: EASE }}
           >
             <button type="button" className="hero-btn hero-btn-primary">
-              See Features
+              Start building
             </button>
             <button type="button" className="hero-btn hero-btn-outline">
-              How It Works
+              Explore LotusBuild
             </button>
           </motion.div>
         </div>
 
         <div className="hero-footer-right">
-          <span className="hero-tag">Neuromorphic</span>
-          <span className="hero-tag">AGI</span>
-          <span className="hero-tag">Cybernetics</span>
+          <span className="hero-tag">Real code</span>
+          <span className="hero-tag">Live preview</span>
+          <span className="hero-tag">Deploy-ready</span>
         </div>
       </motion.div>
     </section>
