@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import markUrl from '../assets/lotusbuild-mark.png'
+import WorkspacePreview from './WorkspacePreview.tsx'
 import './Hero.css'
 
 const EASE = [0.16, 1, 0.3, 1] as const
@@ -77,10 +78,10 @@ function Hero() {
       >
         <div className="hero-footer-left">
           <motion.p
-            className="hero-subtitle"
+            className="hero-eyebrow"
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6, ease: EASE }}
+            transition={{ duration: 0.8, delay: 0.5, ease: EASE }}
           >
             <span className="hero-dot" />
             AI software builder
@@ -90,18 +91,28 @@ function Hero() {
             className="hero-heading"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8, ease: EASE }}
+            transition={{ duration: 0.8, delay: 0.65, ease: EASE }}
           >
             Turn ideas into
             <br />
             working software.
           </motion.h1>
 
+          <motion.p
+            className="hero-lede"
+            initial={{ y: 16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8, ease: EASE }}
+          >
+            Plan, build, preview, and iterate on real applications from one
+            intelligent workspace.
+          </motion.p>
+
           <motion.div
             className="hero-actions"
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.0, ease: EASE }}
+            transition={{ duration: 0.8, delay: 0.95, ease: EASE }}
           >
             <button type="button" className="hero-btn hero-btn-primary">
               Start building
@@ -111,13 +122,9 @@ function Hero() {
             </button>
           </motion.div>
         </div>
-
-        <div className="hero-footer-right">
-          <span className="hero-tag">Real code</span>
-          <span className="hero-tag">Live preview</span>
-          <span className="hero-tag">Deploy-ready</span>
-        </div>
       </motion.div>
+
+      <WorkspacePreview />
     </section>
   )
 }
