@@ -1,380 +1,298 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
-import markUrl from '../assets/lotusbuild-mark.png'
+import { useEffect, useState } from 'react'
+import { motion } from 'motion/react'
 import './WorkspacePreview.css'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-type StepState = 'done' | 'active' | 'todo'
-
-type Project = {
-  id: string
-  chip: string
-  prompt: string
-  plan: { label: string; state: StepState }[]
-  code: string[]
-  render: () => ReactNode
-}
-
-const PROJECTS: Project[] = [
-  {
-    id: 'waitlist',
-    chip: 'Waitlist page',
-    prompt: 'Build a landing page with an email waitlist.',
-    plan: [
-      { label: 'Plan the pages and data model', state: 'done' },
-      { label: 'Generate the hero and waitlist form', state: 'done' },
-      { label: 'Preview and iterate', state: 'active' },
-      { label: 'Publish to production', state: 'todo' },
-    ],
-    code: [
-      "export function Waitlist() {",
-      "  const [email, setEmail] = useState('')",
-      '',
-      '  return (',
-      '    <form onSubmit={join}>',
-      '      <h1>Join the waitlist</h1>',
-      '      <input value={email} onChange={onChange} />',
-      '      <button>Notify me</button>',
-      '    </form>',
-      '  )',
-      '}',
-    ],
-    render: () => (
-      <div className="mini">
-        <span className="mini-eyebrow">Early access</span>
-        <h3>Join the waitlist</h3>
-        <p>Be the first to try it — we&rsquo;ll email you at launch.</p>
-        <div className="mini-form">
-          <span className="mini-input">you@company.com</span>
-          <span className="mini-btn">Notify me</span>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: 'dashboard',
-    chip: 'Analytics dashboard',
-    prompt: 'Create a simple analytics dashboard with a chart.',
-    plan: [
-      { label: 'Plan the routes and data model', state: 'done' },
-      { label: 'Build the metric tiles and chart', state: 'done' },
-      { label: 'Preview and iterate', state: 'active' },
-      { label: 'Publish to production', state: 'todo' },
-    ],
-    code: [
-      'export function Dashboard({ metrics }) {',
-      '  return (',
-      '    <main className="grid">',
-      '      {metrics.map((m) => (',
-      '        <Stat key={m.id} label={m.label} value={m.value} />',
-      '      ))}',
-      '      <Chart series={weekly} />',
-      '    </main>',
-      '  )',
-      '}',
-    ],
-    render: () => (
-      <div className="mini mini-dash">
-        <div className="mini-stats">
-          <div className="mini-stat">
-            <b>1,248</b>
-            <span>Signups</span>
-          </div>
-          <div className="mini-stat">
-            <b>72%</b>
-            <span>Active</span>
-          </div>
-          <div className="mini-stat">
-            <b>+18</b>
-            <span>Today</span>
-          </div>
-        </div>
-        <div className="mini-chart" aria-hidden="true">
-          {[42, 58, 36, 72, 51, 84, 63].map((h, i) => (
-            <span key={i} style={{ height: `${h}%` }} />
-          ))}
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: 'blog',
-    chip: 'Minimal blog',
-    prompt: 'Make a minimal blog with a list of posts.',
-    plan: [
-      { label: 'Plan the content model', state: 'done' },
-      { label: 'Generate the post list and layout', state: 'done' },
-      { label: 'Preview and iterate', state: 'active' },
-      { label: 'Publish to production', state: 'todo' },
-    ],
-    code: [
-      'export function Blog({ posts }) {',
-      '  return (',
-      '    <ul className="posts">',
-      '      {posts.map((p) => (',
-      '        <li key={p.slug}>',
-      '          <a href={p.slug}>{p.title}</a>',
-      '        </li>',
-      '      ))}',
-      '    </ul>',
-      '  )',
-      '}',
-    ],
-    render: () => (
-      <div className="mini mini-blog">
-        <h3>Field notes</h3>
-        <ul>
-          <li>
-            <span>Shipping faster with LotusBuild</span>
-            <em>Mar 4</em>
-          </li>
-          <li>
-            <span>From prompt to production</span>
-            <em>Feb 18</em>
-          </li>
-          <li>
-            <span>Designing the workspace</span>
-            <em>Feb 2</em>
-          </li>
-        </ul>
-      </div>
-    ),
-  },
-]
-
-function Step({ state }: { state: StepState }) {
-  if (state === 'done') {
-    return (
-      <svg className="wp-step" viewBox="0 0 16 16" aria-hidden="true">
-        <circle cx="8" cy="8" r="8" fill="#111" />
-        <path
-          d="M4.6 8.2l2.1 2.1 4.7-4.7"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    )
-  }
-  if (state === 'active') {
-    return (
-      <span className="wp-step wp-step-active" aria-hidden="true">
-        <span className="wp-step-active-dot" />
-      </span>
-    )
-  }
-  return <span className="wp-step wp-step-todo" aria-hidden="true" />
-}
-
-function SendArrow() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-      <path
-        d="M7 11.5V3M7 3L3.4 6.6M7 3l3.6 3.6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
 function WorkspacePreview() {
-  const [active, setActive] = useState(0)
-  const [typed, setTyped] = useState('')
-  const [visibleLines, setVisibleLines] = useState(0)
-  const [tab, setTab] = useState<'preview' | 'code'>('code')
-  const [paused, setPaused] = useState(false)
-
-  const timers = useRef<number[]>([])
-  const project = PROJECTS[active]
-  const promptDone = typed.length >= project.prompt.length
-  const codeStreaming = visibleLines < project.code.length
+  const [step3Done, setStep3Done] = useState(false)
+  const [codeLines, setCodeLines] = useState(0)
+  const [terminalLines, setTerminalLines] = useState(0)
 
   useEffect(() => {
-    timers.current.forEach((t) => window.clearTimeout(t))
-    timers.current = []
-
-    setTyped('')
-    setVisibleLines(0)
-    setTab('code')
-
-    const { prompt, code } = PROJECTS[active]
-
-    for (let i = 1; i <= prompt.length; i += 1) {
-      timers.current.push(
-        window.setTimeout(() => setTyped(prompt.slice(0, i)), 14 * i),
+    const step3Timer = window.setTimeout(() => setStep3Done(true), 2200)
+    
+    const codeTimers: number[] = []
+    for (let i = 1; i <= 16; i += 1) {
+      codeTimers.push(
+        window.setTimeout(() => setCodeLines(i), 600 + i * 75),
       )
     }
-    const afterPrompt = 14 * prompt.length + 250
 
-    for (let i = 0; i < code.length; i += 1) {
-      timers.current.push(
-        window.setTimeout(() => setVisibleLines(i + 1), afterPrompt + i * 110),
+    const termTimers: number[] = []
+    for (let i = 1; i <= 4; i += 1) {
+      termTimers.push(
+        window.setTimeout(() => setTerminalLines(i), 1800 + i * 120),
       )
     }
-    const afterCode = afterPrompt + code.length * 110 + 650
-    timers.current.push(window.setTimeout(() => setTab('preview'), afterCode))
 
     return () => {
-      timers.current.forEach((t) => window.clearTimeout(t))
-      timers.current = []
+      window.clearTimeout(step3Timer)
+      codeTimers.forEach((t) => window.clearTimeout(t))
+      termTimers.forEach((t) => window.clearTimeout(t))
     }
-  }, [active])
-
-  useEffect(() => {
-    if (paused) return undefined
-    const id = window.setTimeout(
-      () => setActive((a) => (a + 1) % PROJECTS.length),
-      8200,
-    )
-    return () => window.clearTimeout(id)
-  }, [active, paused])
-
-  function selectTab(next: 'preview' | 'code') {
-    timers.current.forEach((t) => window.clearTimeout(t))
-    timers.current = []
-    setTab(next)
-  }
+  }, [])
 
   return (
     <motion.div
-      className="wp"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      initial={{ y: 28, opacity: 0 }}
+      className="ws"
+      initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 1, delay: 1.1, ease: EASE }}
+      transition={{ duration: 1, delay: 1.15, ease: EASE }}
     >
-      <div className="wp-bar">
-        <div className="wp-dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+      <div className="ws-chrome">
+        <div className="ws-dots" aria-hidden="true">
+          <span className="ws-dot-red" />
+          <span className="ws-dot-yellow" />
+          <span className="ws-dot-green" />
         </div>
-        <div className="wp-tab">{project.id}-app · workspace</div>
-        <div className="wp-live">
-          <span className="wp-live-dot" aria-hidden="true" />
-          Live
-        </div>
+        <span className="ws-title">payments-api</span>
       </div>
 
-      <div className="wp-body">
-        <div className="wp-chat">
-          <div className="wp-msg wp-msg-user">
-            <span className="wp-ava" aria-hidden="true" />
-            <p>
-              {typed}
-              {!promptDone && <span className="wp-caret" />}
-            </p>
+      <div className="ws-body">
+        <aside className="ws-left">
+          <div className="ws-section">
+            <h3 className="ws-section-label">In Progress</h3>
+            <ul className="ws-tasks">
+              <li className="ws-task is-done">
+                <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-check">
+                  <circle cx="8" cy="8" r="8" fill="#10b981" />
+                  <path
+                    d="M4.8 8.2l2 2 4.4-4.4"
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <div className="ws-task-content">
+                  <span className="ws-task-title">Set up Stripe integration</span>
+                  <span className="ws-task-meta">2 files changed</span>
+                </div>
+              </li>
+              <li className="ws-task is-done">
+                <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-check">
+                  <circle cx="8" cy="8" r="8" fill="#10b981" />
+                  <path
+                    d="M4.8 8.2l2 2 4.4-4.4"
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <div className="ws-task-content">
+                  <span className="ws-task-title">Create checkout endpoint</span>
+                  <span className="ws-task-meta">1 file changed</span>
+                </div>
+              </li>
+              <motion.li
+                className={`ws-task ${step3Done ? 'is-done' : 'is-active'}`}
+                animate={step3Done ? { opacity: 1 } : {}}
+                transition={{ duration: 0.4 }}
+              >
+                {step3Done ? (
+                  <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-check">
+                    <circle cx="8" cy="8" r="8" fill="#10b981" />
+                    <path
+                      d="M4.8 8.2l2 2 4.4-4.4"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <span className="ws-spinner" aria-hidden="true">
+                    <span className="ws-spinner-dot" />
+                  </span>
+                )}
+                <div className="ws-task-content">
+                  <span className="ws-task-title">Test payment flow</span>
+                  <span className="ws-task-meta">Running tests...</span>
+                </div>
+              </motion.li>
+            </ul>
           </div>
 
-          <div className="wp-msg wp-msg-bot">
-            <span className="wp-mark" aria-hidden="true">
-              <img src={markUrl} width="14" height="14" alt="" />
-            </span>
-            <div className="wp-bot-body">
-              <p className="wp-plan-title">Here&rsquo;s the plan</p>
-              <ul className="wp-plan">
-                {project.plan.map((step, i) => (
-                  <motion.li
-                    key={`${project.id}-${step.label}`}
-                    className={`wp-plan-item is-${step.state}`}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.15 * i, ease: EASE }}
-                  >
-                    <Step state={step.state} />
-                    <span>{step.label}</span>
-                  </motion.li>
-                ))}
+          <div className="ws-section">
+            <h3 className="ws-section-label">Ready for Review</h3>
+            <ul className="ws-tasks">
+              <li className="ws-task is-ready">
+                <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-icon">
+                  <circle cx="8" cy="8" r="7" fill="none" stroke="#6b7280" strokeWidth="1.5" />
+                </svg>
+                <div className="ws-task-content">
+                  <span className="ws-task-title">Add error handling</span>
+                  <span className="ws-task-meta">Waiting</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </aside>
+
+        <section className="ws-center">
+          <div className="ws-chat">
+            <div className="ws-msg">
+              <div className="ws-msg-header">
+                <strong>Current Task</strong>
+                <span className="ws-status-badge">Building</span>
+              </div>
+              <p className="ws-msg-text">
+                Implement Stripe payment integration for subscription checkout
+              </p>
+            </div>
+
+            <div className="ws-changes">
+              <h4 className="ws-changes-title">Files Modified</h4>
+              <ul className="ws-files">
+                <li className="ws-file-item">
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6l-4-4z" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <span>route.ts</span>
+                  <span className="ws-diff">+42 -8</span>
+                </li>
+                <li className="ws-file-item">
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6l-4-4z" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <span>stripe.ts</span>
+                  <span className="ws-diff">+18 -0</span>
+                </li>
               </ul>
             </div>
-          </div>
 
-          <div className="wp-suggest">
-            {PROJECTS.map((p, i) => (
-              <button
-                key={p.id}
-                type="button"
-                className={`wp-chip ${i === active ? 'is-active' : ''}`}
-                onClick={() => setActive(i)}
-              >
-                {p.chip}
-              </button>
-            ))}
-          </div>
-
-          <div className="wp-input">
-            <span>Describe a change&hellip;</span>
-            <button type="button" aria-label="Send message">
-              <SendArrow />
-            </button>
-          </div>
-        </div>
-
-        <div className="wp-preview">
-          <div className="wp-preview-bar">
-            <div className="wp-seg">
-              <button
-                type="button"
-                className={tab === 'preview' ? 'is-active' : ''}
-                onClick={() => selectTab('preview')}
-              >
-                Preview
-              </button>
-              <button
-                type="button"
-                className={tab === 'code' ? 'is-active' : ''}
-                onClick={() => selectTab('code')}
-              >
-                Code
-              </button>
+            <div className="ws-status-msg">
+              <span className="ws-status-icon" />
+              Done. Payment endpoint created and tested.
             </div>
-            <span className="wp-url">localhost:5173</span>
+          </div>
+        </section>
+
+        <section className="ws-right">
+          <div className="ws-pane">
+            <div className="ws-pane-header">
+              <span className="ws-pane-label">src/app/api/checkout/route.ts</span>
+              <span className="ws-pane-status">Modified</span>
+            </div>
+            <div className="ws-code">
+              {codeLines >= 1 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">1</span>
+                  <code><span className="t-keyword">import</span> <span className="t-punctuation">{'{'}</span> stripe <span className="t-punctuation">{'}'}</span> <span className="t-keyword">from</span> <span className="t-string">'@/lib/stripe'</span></code>
+                </div>
+              )}
+              {codeLines >= 2 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">2</span>
+                  <code><span className="t-keyword">import</span> <span className="t-punctuation">{'{'}</span> db <span className="t-punctuation">{'}'}</span> <span className="t-keyword">from</span> <span className="t-string">'@/lib/db'</span></code>
+                </div>
+              )}
+              {codeLines >= 3 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">3</span>
+                  <code>&nbsp;</code>
+                </div>
+              )}
+              {codeLines >= 4 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">4</span>
+                  <code><span className="t-keyword">export</span> <span className="t-keyword">async</span> <span className="t-keyword">function</span> <span className="t-function">POST</span><span className="t-punctuation">(</span>req<span className="t-punctuation">:</span> Request<span className="t-punctuation">)</span> <span className="t-punctuation">{'{'}</span></code>
+                </div>
+              )}
+              {codeLines >= 5 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">5</span>
+                  <code>  <span className="t-keyword">const</span> <span className="t-punctuation">{'{'}</span> email<span className="t-punctuation">,</span> plan <span className="t-punctuation">{'}'}</span> <span className="t-operator">=</span> <span className="t-keyword">await</span> req<span className="t-punctuation">.</span><span className="t-function">json</span><span className="t-punctuation">()</span></code>
+                </div>
+              )}
+              {codeLines >= 6 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">6</span>
+                  <code>&nbsp;</code>
+                </div>
+              )}
+              {codeLines >= 7 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">7</span>
+                  <code>  <span className="t-keyword">const</span> customer <span className="t-operator">=</span> <span className="t-keyword">await</span> stripe<span className="t-punctuation">.</span>customers<span className="t-punctuation">.</span><span className="t-function">create</span><span className="t-punctuation">({'{'}</span></code>
+                </div>
+              )}
+              {codeLines >= 8 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">8</span>
+                  <code>    email<span className="t-punctuation">,</span></code>
+                </div>
+              )}
+              {codeLines >= 9 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">9</span>
+                  <code>  <span className="t-punctuation">{'})'}</span></code>
+                </div>
+              )}
+              {codeLines >= 10 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">10</span>
+                  <code>&nbsp;</code>
+                </div>
+              )}
+              {codeLines >= 11 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">11</span>
+                  <code>  <span className="t-keyword">const</span> session <span className="t-operator">=</span> <span className="t-keyword">await</span> stripe<span className="t-punctuation">.</span>checkout<span className="t-punctuation">.</span>sessions<span className="t-punctuation">.</span><span className="t-function">create</span><span className="t-punctuation">({'{'}</span></code>
+                </div>
+              )}
+              {codeLines >= 12 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">12</span>
+                  <code>    customer<span className="t-punctuation">:</span> customer<span className="t-punctuation">.</span>id<span className="t-punctuation">,</span></code>
+                </div>
+              )}
+              {codeLines >= 13 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">13</span>
+                  <code>    mode<span className="t-punctuation">:</span> <span className="t-string">'subscription'</span><span className="t-punctuation">,</span></code>
+                </div>
+              )}
+              {codeLines >= 14 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">14</span>
+                  <code>    line_items<span className="t-punctuation">:</span> <span className="t-punctuation">[{'{'}</span> price<span className="t-punctuation">:</span> plan <span className="t-punctuation">{'}'}</span>]<span className="t-punctuation">,</span></code>
+                </div>
+              )}
+              {codeLines >= 15 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">15</span>
+                  <code>  <span className="t-punctuation">{'})'}</span></code>
+                </div>
+              )}
+              {codeLines >= 16 && (
+                <div className="ws-code-line">
+                  <span className="ws-ln">16</span>
+                  <code><span className="t-punctuation">{'}'}</span></code>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="wp-pane">
-            <AnimatePresence mode="wait">
-              {tab === 'code' ? (
-                <motion.div
-                  key="code"
-                  className="wp-code"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  {project.code.slice(0, visibleLines).map((line, i) => (
-                    <div className="wp-code-line" key={i}>
-                      <span className="wp-ln">{i + 1}</span>
-                      <code>{line === '' ? '\u00a0' : line}</code>
-                      {i === visibleLines - 1 && codeStreaming && (
-                        <span className="wp-caret" />
-                      )}
-                    </div>
-                  ))}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={`preview-${project.id}`}
-                  className="wp-canvas"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: EASE }}
-                >
-                  {project.render()}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div className="ws-terminal">
+            <div className="ws-terminal-header">
+              <span>Terminal</span>
+            </div>
+            <div className="ws-terminal-body">
+              {terminalLines >= 1 && <div className="ws-term-line">$ npm test</div>}
+              {terminalLines >= 2 && <div className="ws-term-line ws-term-dim">Running tests...</div>}
+              {terminalLines >= 3 && <div className="ws-term-line ws-term-success">✓ Payment endpoint tests passed</div>}
+              {terminalLines >= 4 && <div className="ws-term-line ws-term-dim">3 passed, 0 failed</div>}
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </motion.div>
   )
