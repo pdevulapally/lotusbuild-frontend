@@ -52,8 +52,8 @@ function Hero() {
         </div>
 
         <div className="hero-tags-pill">
-          <span>Agents</span>
-          <span>Sessions</span>
+          <span>Plan &amp; build</span>
+          <span>Preview &amp; ship</span>
         </div>
 
         <div className="hero-nav-right">
@@ -61,11 +61,11 @@ function Hero() {
             <button
               type="button"
               className="hero-grid-btn"
-              aria-label="Desktop"
+              aria-label="Workspace"
             >
               <GridIcon />
             </button>
-            <span className="hero-right-label">Desktop</span>
+            <span className="hero-right-label">Workspace</span>
           </div>
         </div>
       </motion.nav>
@@ -84,7 +84,7 @@ function Hero() {
             transition={{ duration: 0.8, delay: 0.5, ease: EASE }}
           >
             <span className="hero-dot" />
-            Agent desktop
+            AI software builder
           </motion.p>
 
           <motion.h1
@@ -93,9 +93,9 @@ function Hero() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.65, ease: EASE }}
           >
-            The desktop for
+            Turn ideas into
             <br />
-            your agents.
+            working software.
           </motion.h1>
 
           <motion.p
@@ -104,8 +104,8 @@ function Hero() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.8, ease: EASE }}
           >
-            Plan, delegate, and review from one desktop. Sessions, runs, and
-            your org — in one place.
+            Plan, build, preview, and iterate on real applications from one
+            intelligent workspace.
           </motion.p>
 
           <motion.div
@@ -115,10 +115,10 @@ function Hero() {
             transition={{ duration: 0.8, delay: 0.95, ease: EASE }}
           >
             <button type="button" className="hero-btn hero-btn-primary">
-              Open the desktop
+              Start building
             </button>
-            <a href="#desktop" className="hero-btn hero-btn-outline">
-              See the product
+            <a href="#product" className="hero-btn hero-btn-outline">
+              Explore LotusBuild
             </a>
           </motion.div>
         </div>

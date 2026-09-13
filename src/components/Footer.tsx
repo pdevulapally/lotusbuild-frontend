@@ -19,7 +19,7 @@ function Footer() {
         </a>
 
         <nav className="footer-nav" aria-label="Footer">
-          <a href="#desktop">Desktop</a>
+          <a href="#product">Product</a>
           <a href="#sessions">Sessions</a>
           <a
             href="https://github.com/pdevulapally/lotusbuild-frontend"
@@ -32,7 +32,7 @@ function Footer() {
       </div>
 
       <div className="footer-base">
-        <p>Agent desktop</p>
+        <p>LotusBuild</p>
         <p>&copy; {year} LotusBuild</p>
       </div>
     </footer>

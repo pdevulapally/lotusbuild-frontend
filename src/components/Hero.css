@@ -147,7 +147,7 @@
 
 .hero-heading {
   margin: 0;
-  max-width: 16ch;
+  max-width: 14ch;
   font-size: clamp(2.25rem, 7.5vw, 4.5rem);
   font-weight: 400;
   letter-spacing: -0.035em;

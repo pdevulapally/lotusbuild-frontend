@@ -11,7 +11,7 @@ const SURFACES = [
   },
   {
     name: 'Organizations',
-    body: 'Who can use the desktop. Sessions and runs are scoped to the org.',
+    body: 'Who can see the work. Sessions and runs are scoped to the org.',
   },
 ]
 
@@ -19,7 +19,7 @@ function ProductSurfaces() {
   return (
     <section className="surfaces" id="sessions">
       <div className="surfaces-inner">
-        <p className="surfaces-kicker">In the product</p>
+        <p className="surfaces-kicker">Workspace</p>
         <div className="surfaces-grid">
           {SURFACES.map((surface) => (
             <article key={surface.name}>
