@@ -130,7 +130,7 @@ const PROJECTS: Project[] = [
             <em>Mar 4</em>
           </li>
           <li>
-            <span>From prompt to production</span>
+            <span>From session to desktop</span>
             <em>Feb 18</em>
           </li>
           <li>
@@ -257,7 +257,7 @@ function WorkspacePreview() {
           <span />
           <span />
         </div>
-        <div className="wp-tab">{project.id}-app · workspace</div>
+        <div className="wp-tab">{project.id}-app · desktop</div>
         <div className="wp-live">
           <span className="wp-live-dot" aria-hidden="true" />
           Live
@@ -311,7 +311,7 @@ function WorkspacePreview() {
           </div>
 
           <div className="wp-input">
-            <span>Describe a change&hellip;</span>
+            <span>Steer the agent&hellip;</span>
             <button type="button" aria-label="Send message">
               <SendArrow />
             </button>

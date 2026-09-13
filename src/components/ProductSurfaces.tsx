@@ -3,35 +3,31 @@ import './ProductSurfaces.css'
 const SURFACES = [
   {
     name: 'Sessions',
-    body: 'A session is the thread. Prompt, plan, files, and preview stay in one place so you can leave and come back.',
+    body: 'The job you come back to. Agent, history, and files stay in the session.',
   },
   {
     name: 'Agent runs',
-    body: 'A run is one pass of the agent. The plan and the file changes belong to that run.',
+    body: 'One pass of the agent. Logged against the session so you can see what changed.',
   },
   {
     name: 'Organizations',
-    body: 'Sessions live under an organization. That is how access and ownership are scoped.',
+    body: 'Who can use the desktop. Sessions and runs are scoped to the org.',
   },
 ]
 
 function ProductSurfaces() {
   return (
-    <section className="surfaces" id="workspace">
+    <section className="surfaces" id="sessions">
       <div className="surfaces-inner">
-        <header className="surfaces-header">
-          <span className="surfaces-kicker">Workspace</span>
-          <h2 className="surfaces-title">Sessions, runs, and orgs.</h2>
-        </header>
-
-        <dl className="surfaces-list">
+        <p className="surfaces-kicker">In the product</p>
+        <div className="surfaces-grid">
           {SURFACES.map((surface) => (
-            <div key={surface.name} className="surfaces-row">
-              <dt>{surface.name}</dt>
-              <dd>{surface.body}</dd>
-            </div>
+            <article key={surface.name}>
+              <h3>{surface.name}</h3>
+              <p>{surface.body}</p>
+            </article>
           ))}
-        </dl>
+        </div>
       </div>
     </section>
   )
