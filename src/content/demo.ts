@@ -90,8 +90,10 @@ export const session = {
   },
   replayLabel: 'Replay',
   railLabel: 'Conversation',
+  agentName: 'LotusBuild',
   composer: {
     placeholder: 'Ask for a change…',
+    hint: 'Enter to send',
     send: 'Send',
   },
   cannedReply:

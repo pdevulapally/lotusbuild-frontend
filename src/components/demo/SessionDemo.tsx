@@ -1,7 +1,7 @@
 import { session, stages } from '../../content/demo.ts'
 import ArtifactView from './Artifacts.tsx'
 import StageStrip from './StageStrip.tsx'
-import ConversationRail from './ConversationRail.tsx'
+import Conversation from './Conversation.tsx'
 import type { SessionState } from './useSession.ts'
 import './demo.css'
 
@@ -40,15 +40,16 @@ function SessionDemo({
         onSelect={(i) => select(stages[i].id)}
       />
 
-      <div className="demo-artifact-area">
-        <ArtifactView
-          artifact={viewed.artifact}
-          artifactKey={`${viewed.id}-${runKey}`}
-          progress={progressOf(viewIndex)}
-        />
+      <div className="demo-body">
+        <Conversation messages={messages} working={working} onSend={send} />
+        <div className="demo-artifact-area">
+          <ArtifactView
+            artifact={viewed.artifact}
+            artifactKey={`${viewed.id}-${runKey}`}
+            progress={progressOf(viewIndex)}
+          />
+        </div>
       </div>
-
-      <ConversationRail messages={messages} onSend={send} />
     </div>
   )
 }

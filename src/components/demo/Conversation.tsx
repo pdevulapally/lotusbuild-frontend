@@ -12,6 +12,7 @@ const EASE = [0.16, 1, 0.3, 1] as const
 
 type Props = {
   messages: Message[]
+  working: boolean
   onSend: (text: string) => void
 }
 
@@ -24,25 +25,27 @@ function StepIcon({ kind }: { kind: AgentStep['kind'] }) {
   )
 }
 
-function MessageCard({ message }: { message: Message }) {
+function Entry({ message }: { message: Message }) {
   switch (message.role) {
     case 'user':
       return (
-        <div className="demo-card demo-card-user">
-          <span className="demo-card-who">You</span>
+        <div className="demo-msg demo-msg-user">
           <p>{message.text}</p>
         </div>
       )
     case 'assistant':
       return (
-        <div className="demo-card demo-card-agent">
-          <span className="demo-card-who">LotusBuild</span>
+        <div className="demo-msg demo-msg-agent">
+          <span className="demo-msg-who">
+            <span className="demo-msg-mark" aria-hidden="true" />
+            {session.agentName}
+          </span>
           <p>{message.text}</p>
         </div>
       )
     case 'steps':
       return (
-        <ul className="demo-card demo-card-steps">
+        <ul className="demo-msg demo-msg-steps">
           {message.steps.map((step) => (
             <li key={step.text}>
               <StepIcon kind={step.kind} />
@@ -53,7 +56,7 @@ function MessageCard({ message }: { message: Message }) {
       )
     case 'files':
       return (
-        <ul className="demo-card demo-card-files">
+        <ul className="demo-msg demo-msg-files">
           {message.files.map((file) => (
             <li key={file.path}>
               <span className="demo-file-path">{file.path}</span>
@@ -65,14 +68,14 @@ function MessageCard({ message }: { message: Message }) {
   }
 }
 
-function ConversationRail({ messages, onSend }: Props) {
+function Conversation({ messages, working, onSend }: Props) {
   const [draft, setDraft] = useState('')
-  const scrollerRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const el = scrollerRef.current
-    if (el) el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
-  }, [messages.length])
+    const el = scrollRef.current
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [messages.length, working])
 
   const submit = (e?: FormEvent) => {
     e?.preventDefault()
@@ -90,20 +93,26 @@ function ConversationRail({ messages, onSend }: Props) {
   }
 
   return (
-    <div className="demo-rail">
-      <div className="demo-rail-label">{session.railLabel}</div>
-      <div className="demo-rail-scroller" ref={scrollerRef}>
+    <aside className="demo-chat" aria-label={session.railLabel}>
+      <div className="demo-chat-label">{session.railLabel}</div>
+      <div className="demo-chat-scroll" ref={scrollRef}>
         {messages.map((message, i) => (
           <motion.div
             key={i}
-            className="demo-rail-item"
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: EASE }}
           >
-            <MessageCard message={message} />
+            <Entry message={message} />
           </motion.div>
         ))}
+        {working && (
+          <div className="demo-msg demo-msg-typing" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        )}
       </div>
       <form className="demo-composer" onSubmit={submit}>
         <textarea
@@ -116,12 +125,15 @@ function ConversationRail({ messages, onSend }: Props) {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
         />
-        <button type="submit" className="demo-send" disabled={!draft.trim()}>
-          {session.composer.send}
-        </button>
+        <div className="demo-composer-bar">
+          <span className="demo-composer-hint">{session.composer.hint}</span>
+          <button type="submit" className="demo-send" disabled={!draft.trim()}>
+            {session.composer.send}
+          </button>
+        </div>
       </form>
-    </div>
+    </aside>
   )
 }
 
-export default ConversationRail
+export default Conversation
