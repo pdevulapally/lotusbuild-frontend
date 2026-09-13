@@ -1,0 +1,53 @@
+.surfaces {
+  padding: 0 16px 96px;
+  background: #fff;
+}
+
+.surfaces-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding-top: 40px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.surfaces-kicker {
+  margin: 0 0 28px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.surfaces-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.surfaces-grid h3 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: #111;
+}
+
+.surfaces-grid p {
+  margin: 0;
+  max-width: 32ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 768px) {
+  .surfaces {
+    padding: 0 32px 120px;
+  }
+
+  .surfaces-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px 40px;
+  }
+}

@@ -1,298 +1,240 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { motion } from 'motion/react'
+import markUrl from '../assets/lotusbuild-mark.png'
 import './WorkspacePreview.css'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
+type SessionStatus = 'running' | 'review' | 'idle'
+
+type Session = {
+  id: string
+  name: string
+  status: SessionStatus
+  run: string
+  file: string
+  code: string[]
+  changed: number
+  note: string
+  terminal: string[]
+  vmUrl: string
+  preview: () => ReactNode
+}
+
+const SESSIONS: Session[] = [
+  {
+    id: 'billing',
+    name: 'billing-api',
+    status: 'running',
+    run: '184',
+    file: 'src/invoice.ts',
+    changed: 1,
+    note: 'Updating settle() to skip voided invoices.',
+    terminal: [
+      '$ npm test src/invoice.ts',
+      'PASS  settle skips void',
+      '2 passed',
+    ],
+    vmUrl: 'localhost:4173/invoices',
+    code: [
+      'export function settle(invoice: Invoice) {',
+      '  if (invoice.status === "void") {',
+      '    return invoice',
+      '  }',
+      '',
+      '  return applyBalance(invoice)',
+      '}',
+    ],
+    preview: () => (
+      <div className="wp-app">
+        <div className="wp-app-row">
+          <span>INV-204</span>
+          <em>void</em>
+        </div>
+        <div className="wp-app-row">
+          <span>INV-205</span>
+          <b>$480.00</b>
+        </div>
+        <div className="wp-app-row">
+          <span>INV-206</span>
+          <b>$120.00</b>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'auth',
+    name: 'auth-fix',
+    status: 'review',
+    run: '179',
+    file: 'src/session.ts',
+    changed: 2,
+    note: 'Session token refresh now fails closed.',
+    terminal: [
+      '$ npm test src/session.ts',
+      'PASS  refresh fails closed',
+      '1 passed',
+    ],
+    vmUrl: 'localhost:4173/login',
+    code: [
+      'export async function refresh(token: Token) {',
+      '  const next = await issue(token)',
+      '  if (!next) {',
+      '    throw new AuthError("expired")',
+      '  }',
+      '',
+      '  return next',
+      '}',
+    ],
+    preview: () => (
+      <div className="wp-app">
+        <span className="wp-app-label">Session</span>
+        <strong>Expired</strong>
+        <span className="wp-app-btn">Sign in again</span>
+      </div>
+    ),
+  },
+  {
+    id: 'onboarding',
+    name: 'onboarding',
+    status: 'idle',
+    run: '166',
+    file: 'src/org.ts',
+    changed: 1,
+    note: 'Org invite accepts only members of the same org.',
+    terminal: [
+      '$ npm test src/org.ts',
+      'PASS  canInvite scopes to org',
+      '1 passed',
+    ],
+    vmUrl: 'localhost:4173/org/members',
+    code: [
+      'export function canInvite(actor: Member, org: Org) {',
+      '  return actor.orgId === org.id',
+      '}',
+    ],
+    preview: () => (
+      <div className="wp-app">
+        <div className="wp-app-row">
+          <span>ada@acme</span>
+          <em>member</em>
+        </div>
+        <div className="wp-app-row">
+          <span>lin@acme</span>
+          <em>member</em>
+        </div>
+      </div>
+    ),
+  },
+]
+
+const STATUS_LABEL: Record<SessionStatus, string> = {
+  running: 'Running',
+  review: 'Review',
+  idle: 'Idle',
+}
+
 function WorkspacePreview() {
-  const [step3Done, setStep3Done] = useState(false)
-  const [codeLines, setCodeLines] = useState(0)
-  const [terminalLines, setTerminalLines] = useState(0)
+  const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const session = SESSIONS[active]
 
   useEffect(() => {
-    const step3Timer = window.setTimeout(() => setStep3Done(true), 2200)
-    
-    const codeTimers: number[] = []
-    for (let i = 1; i <= 16; i += 1) {
-      codeTimers.push(
-        window.setTimeout(() => setCodeLines(i), 600 + i * 75),
-      )
-    }
-
-    const termTimers: number[] = []
-    for (let i = 1; i <= 4; i += 1) {
-      termTimers.push(
-        window.setTimeout(() => setTerminalLines(i), 1800 + i * 120),
-      )
-    }
-
-    return () => {
-      window.clearTimeout(step3Timer)
-      codeTimers.forEach((t) => window.clearTimeout(t))
-      termTimers.forEach((t) => window.clearTimeout(t))
-    }
-  }, [])
+    if (paused) return undefined
+    const id = window.setTimeout(
+      () => setActive((i) => (i + 1) % SESSIONS.length),
+      7000,
+    )
+    return () => window.clearTimeout(id)
+  }, [active, paused])
 
   return (
     <motion.div
-      className="ws"
-      initial={{ y: 40, opacity: 0 }}
+      className="wp"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      initial={{ y: 28, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 1, delay: 1.15, ease: EASE }}
+      transition={{ duration: 1, delay: 1.1, ease: EASE }}
     >
-      <div className="ws-chrome">
-        <div className="ws-dots" aria-hidden="true">
-          <span className="ws-dot-red" />
-          <span className="ws-dot-yellow" />
-          <span className="ws-dot-green" />
+      <div className="wp-bar">
+        <div className="wp-brand">
+          <img src={markUrl} width="14" height="14" alt="" />
+          <span>LotusBuild</span>
         </div>
-        <span className="ws-title">payments-api</span>
+        <span className="wp-org">org / acme</span>
       </div>
 
-      <div className="ws-body">
-        <aside className="ws-left">
-          <div className="ws-section">
-            <h3 className="ws-section-label">In Progress</h3>
-            <ul className="ws-tasks">
-              <li className="ws-task is-done">
-                <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-check">
-                  <circle cx="8" cy="8" r="8" fill="#10b981" />
-                  <path
-                    d="M4.8 8.2l2 2 4.4-4.4"
-                    fill="none"
-                    stroke="#fff"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <div className="ws-task-content">
-                  <span className="ws-task-title">Set up Stripe integration</span>
-                  <span className="ws-task-meta">2 files changed</span>
-                </div>
+      <div className="wp-body">
+        <aside className="wp-sessions">
+          <p className="wp-col-label">Sessions</p>
+          <ul>
+            {SESSIONS.map((item, i) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className={i === active ? 'is-active' : ''}
+                  onClick={() => setActive(i)}
+                >
+                  <span className={`wp-st is-${item.status}`} />
+                  <span className="wp-s-name">{item.name}</span>
+                  <span className="wp-s-meta">{STATUS_LABEL[item.status]}</span>
+                </button>
               </li>
-              <li className="ws-task is-done">
-                <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-check">
-                  <circle cx="8" cy="8" r="8" fill="#10b981" />
-                  <path
-                    d="M4.8 8.2l2 2 4.4-4.4"
-                    fill="none"
-                    stroke="#fff"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <div className="ws-task-content">
-                  <span className="ws-task-title">Create checkout endpoint</span>
-                  <span className="ws-task-meta">1 file changed</span>
-                </div>
-              </li>
-              <motion.li
-                className={`ws-task ${step3Done ? 'is-done' : 'is-active'}`}
-                animate={step3Done ? { opacity: 1 } : {}}
-                transition={{ duration: 0.4 }}
-              >
-                {step3Done ? (
-                  <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-check">
-                    <circle cx="8" cy="8" r="8" fill="#10b981" />
-                    <path
-                      d="M4.8 8.2l2 2 4.4-4.4"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <span className="ws-spinner" aria-hidden="true">
-                    <span className="ws-spinner-dot" />
-                  </span>
-                )}
-                <div className="ws-task-content">
-                  <span className="ws-task-title">Test payment flow</span>
-                  <span className="ws-task-meta">Running tests...</span>
-                </div>
-              </motion.li>
-            </ul>
-          </div>
-
-          <div className="ws-section">
-            <h3 className="ws-section-label">Ready for Review</h3>
-            <ul className="ws-tasks">
-              <li className="ws-task is-ready">
-                <svg viewBox="0 0 16 16" aria-hidden="true" className="ws-icon">
-                  <circle cx="8" cy="8" r="7" fill="none" stroke="#6b7280" strokeWidth="1.5" />
-                </svg>
-                <div className="ws-task-content">
-                  <span className="ws-task-title">Add error handling</span>
-                  <span className="ws-task-meta">Waiting</span>
-                </div>
-              </li>
-            </ul>
-          </div>
+            ))}
+          </ul>
         </aside>
 
-        <section className="ws-center">
-          <div className="ws-chat">
-            <div className="ws-msg">
-              <div className="ws-msg-header">
-                <strong>Current Task</strong>
-                <span className="ws-status-badge">Building</span>
+        <div className="wp-main">
+          <div className="wp-filebar">
+            <span className="wp-file">{session.file}</span>
+            <span className="wp-run">
+              Run {session.run}
+              {session.status === 'running' ? ' · writing' : ''}
+            </span>
+          </div>
+
+          <div className="wp-code" key={session.id}>
+            {session.code.map((line, i) => (
+              <div
+                className={`wp-code-line${i === session.changed ? ' is-changed' : ''}`}
+                key={`${session.id}-${i}`}
+              >
+                <span className="wp-ln">{i + 1}</span>
+                <code>{line === '' ? '\u00a0' : line}</code>
               </div>
-              <p className="ws-msg-text">
-                Implement Stripe payment integration for subscription checkout
-              </p>
-            </div>
-
-            <div className="ws-changes">
-              <h4 className="ws-changes-title">Files Modified</h4>
-              <ul className="ws-files">
-                <li className="ws-file-item">
-                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6l-4-4z" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <span>route.ts</span>
-                  <span className="ws-diff">+42 -8</span>
-                </li>
-                <li className="ws-file-item">
-                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6l-4-4z" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <span>stripe.ts</span>
-                  <span className="ws-diff">+18 -0</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="ws-status-msg">
-              <span className="ws-status-icon" />
-              Done. Payment endpoint created and tested.
-            </div>
-          </div>
-        </section>
-
-        <section className="ws-right">
-          <div className="ws-pane">
-            <div className="ws-pane-header">
-              <span className="ws-pane-label">src/app/api/checkout/route.ts</span>
-              <span className="ws-pane-status">Modified</span>
-            </div>
-            <div className="ws-code">
-              {codeLines >= 1 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">1</span>
-                  <code><span className="t-keyword">import</span> <span className="t-punctuation">{'{'}</span> stripe <span className="t-punctuation">{'}'}</span> <span className="t-keyword">from</span> <span className="t-string">'@/lib/stripe'</span></code>
-                </div>
-              )}
-              {codeLines >= 2 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">2</span>
-                  <code><span className="t-keyword">import</span> <span className="t-punctuation">{'{'}</span> db <span className="t-punctuation">{'}'}</span> <span className="t-keyword">from</span> <span className="t-string">'@/lib/db'</span></code>
-                </div>
-              )}
-              {codeLines >= 3 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">3</span>
-                  <code>&nbsp;</code>
-                </div>
-              )}
-              {codeLines >= 4 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">4</span>
-                  <code><span className="t-keyword">export</span> <span className="t-keyword">async</span> <span className="t-keyword">function</span> <span className="t-function">POST</span><span className="t-punctuation">(</span>req<span className="t-punctuation">:</span> Request<span className="t-punctuation">)</span> <span className="t-punctuation">{'{'}</span></code>
-                </div>
-              )}
-              {codeLines >= 5 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">5</span>
-                  <code>  <span className="t-keyword">const</span> <span className="t-punctuation">{'{'}</span> email<span className="t-punctuation">,</span> plan <span className="t-punctuation">{'}'}</span> <span className="t-operator">=</span> <span className="t-keyword">await</span> req<span className="t-punctuation">.</span><span className="t-function">json</span><span className="t-punctuation">()</span></code>
-                </div>
-              )}
-              {codeLines >= 6 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">6</span>
-                  <code>&nbsp;</code>
-                </div>
-              )}
-              {codeLines >= 7 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">7</span>
-                  <code>  <span className="t-keyword">const</span> customer <span className="t-operator">=</span> <span className="t-keyword">await</span> stripe<span className="t-punctuation">.</span>customers<span className="t-punctuation">.</span><span className="t-function">create</span><span className="t-punctuation">({'{'}</span></code>
-                </div>
-              )}
-              {codeLines >= 8 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">8</span>
-                  <code>    email<span className="t-punctuation">,</span></code>
-                </div>
-              )}
-              {codeLines >= 9 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">9</span>
-                  <code>  <span className="t-punctuation">{'})'}</span></code>
-                </div>
-              )}
-              {codeLines >= 10 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">10</span>
-                  <code>&nbsp;</code>
-                </div>
-              )}
-              {codeLines >= 11 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">11</span>
-                  <code>  <span className="t-keyword">const</span> session <span className="t-operator">=</span> <span className="t-keyword">await</span> stripe<span className="t-punctuation">.</span>checkout<span className="t-punctuation">.</span>sessions<span className="t-punctuation">.</span><span className="t-function">create</span><span className="t-punctuation">({'{'}</span></code>
-                </div>
-              )}
-              {codeLines >= 12 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">12</span>
-                  <code>    customer<span className="t-punctuation">:</span> customer<span className="t-punctuation">.</span>id<span className="t-punctuation">,</span></code>
-                </div>
-              )}
-              {codeLines >= 13 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">13</span>
-                  <code>    mode<span className="t-punctuation">:</span> <span className="t-string">'subscription'</span><span className="t-punctuation">,</span></code>
-                </div>
-              )}
-              {codeLines >= 14 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">14</span>
-                  <code>    line_items<span className="t-punctuation">:</span> <span className="t-punctuation">[{'{'}</span> price<span className="t-punctuation">:</span> plan <span className="t-punctuation">{'}'}</span>]<span className="t-punctuation">,</span></code>
-                </div>
-              )}
-              {codeLines >= 15 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">15</span>
-                  <code>  <span className="t-punctuation">{'})'}</span></code>
-                </div>
-              )}
-              {codeLines >= 16 && (
-                <div className="ws-code-line">
-                  <span className="ws-ln">16</span>
-                  <code><span className="t-punctuation">{'}'}</span></code>
-                </div>
-              )}
-            </div>
+            ))}
           </div>
 
-          <div className="ws-terminal">
-            <div className="ws-terminal-header">
-              <span>Terminal</span>
-            </div>
-            <div className="ws-terminal-body">
-              {terminalLines >= 1 && <div className="ws-term-line">$ npm test</div>}
-              {terminalLines >= 2 && <div className="ws-term-line ws-term-dim">Running tests...</div>}
-              {terminalLines >= 3 && <div className="ws-term-line ws-term-success">✓ Payment endpoint tests passed</div>}
-              {terminalLines >= 4 && <div className="ws-term-line ws-term-dim">3 passed, 0 failed</div>}
-            </div>
+          <div className="wp-agent">
+            <span className={`wp-st is-${session.status}`} />
+            <p>{session.note}</p>
           </div>
-        </section>
+        </div>
+
+        <div className="wp-side">
+          <section className="wp-pane">
+            <div className="wp-pane-bar">
+              <span>VM</span>
+              <span className="wp-pane-meta">{session.vmUrl}</span>
+            </div>
+            <div className="wp-term">
+              {session.terminal.map((line) => (
+                <div key={line}>{line}</div>
+              ))}
+            </div>
+          </section>
+
+          <section className="wp-pane">
+            <div className="wp-pane-bar">
+              <span>Preview</span>
+              <span className="wp-pane-meta">User</span>
+            </div>
+            <div className="wp-preview" key={`preview-${session.id}`}>
+              {session.preview()}
+            </div>
+          </section>
+        </div>
       </div>
     </motion.div>
   )

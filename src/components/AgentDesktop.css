@@ -1,0 +1,33 @@
+.desk {
+  padding: 80px 16px 0;
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.desk-inner {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.desk-title {
+  margin: 0;
+  font-size: clamp(1.85rem, 4.2vw, 2.85rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1.06;
+  color: #000;
+}
+
+.desk-lede {
+  margin: 18px 0 0;
+  max-width: 36rem;
+  font-size: 16px;
+  line-height: 1.55;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 768px) {
+  .desk {
+    padding: 104px 32px 0;
+  }
+}
