@@ -1,13 +1,13 @@
 .wp {
   width: 100%;
-  max-width: 980px;
+  max-width: 1020px;
   margin: 0 auto;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
   background: #fff;
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 30px 60px -32px rgba(0, 0, 0, 0.28);
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 20px 50px -16px rgba(0, 0, 0, 0.25);
   overflow: hidden;
   text-align: left;
 }
@@ -17,45 +17,49 @@
 .wp-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fafafa;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f8f8f8;
 }
 
 .wp-dots {
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
 
 .wp-dots span {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.13);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .wp-tab {
   margin: 0 auto;
-  padding: 4px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 3px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 9999px;
   background: #fff;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.5);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.55);
 }
 
 .wp-live {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.55);
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .wp-live-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #111;
   animation: wp-pulse 1.8s ease-in-out infinite;
@@ -65,35 +69,37 @@
 
 .wp-body {
   display: flex;
-  min-height: 360px;
+  min-height: 380px;
 }
 
 .wp-chat {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: 46%;
-  padding: 18px;
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 12px;
+  width: 44%;
+  padding: 16px;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fafafa;
 }
 
 .wp-msg {
   display: flex;
-  gap: 10px;
+  gap: 9px;
 }
 
 .wp-msg p {
   margin: 0;
-  min-height: 20px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: rgba(0, 0, 0, 0.8);
+  min-height: 18px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  letter-spacing: -0.004em;
+  color: rgba(0, 0, 0, 0.85);
 }
 
 .wp-ava {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #111;
 }
@@ -103,10 +109,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 5px;
   background: #fff;
 }
 
@@ -116,16 +122,17 @@
 }
 
 .wp-plan-title {
-  margin: 0 0 10px;
-  font-size: 13px;
+  margin: 0 0 8px;
+  font-size: 12.5px;
   font-weight: 600;
+  letter-spacing: -0.004em;
   color: #111;
 }
 
 .wp-plan {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -134,9 +141,10 @@
 .wp-plan-item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.72);
+  gap: 8px;
+  font-size: 12.5px;
+  letter-spacing: -0.004em;
+  color: rgba(0, 0, 0, 0.75);
 }
 
 .wp-plan-item.is-todo {
@@ -145,21 +153,21 @@
 
 .wp-step {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .wp-step-active {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid #111;
+  border: 1.4px solid #111;
   border-radius: 50%;
 }
 
 .wp-step-active-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #111;
   animation: wp-pulse 1.6s ease-in-out infinite;
@@ -167,7 +175,7 @@
 
 .wp-step-todo {
   display: block;
-  border: 1.5px solid rgba(0, 0, 0, 0.22);
+  border: 1.4px solid rgba(0, 0, 0, 0.25);
   border-radius: 50%;
 }
 
@@ -176,26 +184,27 @@
 .wp-suggest {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
   margin-top: auto;
 }
 
 .wp-chip {
-  padding: 6px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 5px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
   border-radius: 9999px;
   background: #fff;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.65);
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .wp-chip:hover {
-  border-color: rgba(0, 0, 0, 0.35);
+  border-color: rgba(0, 0, 0, 0.4);
   color: #111;
 }
 
@@ -208,28 +217,35 @@
 .wp-input {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 7px 7px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 10px;
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 9px;
+  background: #fff;
 }
 
 .wp-input span {
   flex: 1;
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.4);
+  font-size: 12.5px;
+  letter-spacing: -0.004em;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .wp-input button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   background: #111;
   color: #fff;
+  transition: background 0.15s ease;
+}
+
+.wp-input button:hover {
+  background: #1a1a1a;
 }
 
 /* Right pane: preview + code */
@@ -239,36 +255,38 @@
   flex: 1;
   flex-direction: column;
   min-width: 0;
-  background: #fafafa;
+  background: #fefefe;
 }
 
 .wp-preview-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fafafa;
 }
 
 .wp-seg {
   display: flex;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 7px;
   background: #fff;
 }
 
 .wp-seg button {
-  padding: 5px 14px;
+  padding: 4px 12px;
   border: none;
   background: transparent;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.5);
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.55);
   transition:
-    background 0.2s ease,
-    color 0.2s ease;
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .wp-seg button.is-active {
@@ -277,12 +295,14 @@
 }
 
 .wp-url {
-  padding: 4px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 3px 9px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 9999px;
   background: #fff;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .wp-pane {
@@ -296,26 +316,27 @@
 
 .wp-code {
   flex: 1;
-  padding: 16px 18px;
+  padding: 14px 16px;
   font-family: ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas,
     monospace;
-  font-size: 12.5px;
-  line-height: 1.7;
-  color: rgba(0, 0, 0, 0.78);
+  font-size: 12px;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.82);
 }
 
 .wp-code-line {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   white-space: pre;
 }
 
 .wp-ln {
-  width: 16px;
+  width: 18px;
   flex-shrink: 0;
   text-align: right;
-  color: rgba(0, 0, 0, 0.25);
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.28);
   user-select: none;
 }
 
@@ -331,68 +352,75 @@
   flex: 1;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px;
+  background: #fafafa;
 }
 
 .mini {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   width: 100%;
   max-width: 320px;
-  padding: 26px 24px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  padding: 24px 22px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
   background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   text-align: center;
 }
 
 .mini-eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.45);
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .mini h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.022em;
   color: #111;
 }
 
 .mini p {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgba(0, 0, 0, 0.5);
+  font-size: 11.5px;
+  line-height: 1.55;
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.55);
 }
 
 .mini-form {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  margin-top: 6px;
+  margin-top: 5px;
 }
 
 .mini-input {
   flex: 1;
-  padding: 8px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.4);
+  padding: 7px 11px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 7px;
+  font-size: 11.5px;
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.45);
   text-align: left;
 }
 
 .mini-btn {
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 7px 13px;
+  border-radius: 7px;
   background: #111;
   color: #fff;
-  font-size: 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -0.003em;
   white-space: nowrap;
 }
 
@@ -400,12 +428,12 @@
 
 .mini-dash {
   max-width: 340px;
-  gap: 16px;
+  gap: 14px;
 }
 
 .mini-stats {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -414,40 +442,44 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
+  padding: 9px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 7px;
+  background: #fafafa;
 }
 
 .mini-stat b {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: #111;
 }
 
 .mini-stat span {
-  font-size: 10px;
-  letter-spacing: 0.02em;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.45);
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .mini-chart {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: 7px;
   width: 100%;
-  height: 84px;
-  padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
+  height: 80px;
+  padding: 11px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 7px;
+  background: #fafafa;
 }
 
 .mini-chart span {
   flex: 1;
-  border-radius: 3px 3px 0 0;
+  border-radius: 2px 2px 0 0;
   background: #111;
-  opacity: 0.85;
+  opacity: 0.88;
 }
 
 /* Blog preview */
@@ -466,7 +498,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -475,16 +507,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.75);
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 11.5px;
+  letter-spacing: -0.003em;
+  color: rgba(0, 0, 0, 0.8);
 }
 
 .mini-blog em {
   font-style: normal;
-  color: rgba(0, 0, 0, 0.4);
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.45);
   white-space: nowrap;
 }
 
@@ -542,6 +576,6 @@
   .wp-chat {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 }

@@ -146,13 +146,13 @@ const PROJECTS: Project[] = [
 function Step({ state }: { state: StepState }) {
   if (state === 'done') {
     return (
-      <svg className="wp-step" viewBox="0 0 16 16" aria-hidden="true">
-        <circle cx="8" cy="8" r="8" fill="#111" />
+      <svg className="wp-step" viewBox="0 0 15 15" aria-hidden="true">
+        <circle cx="7.5" cy="7.5" r="7.5" fill="#111" />
         <path
-          d="M4.6 8.2l2.1 2.1 4.7-4.7"
+          d="M4.2 7.7l2 2 4.6-4.6"
           fill="none"
           stroke="#fff"
-          strokeWidth="1.6"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
