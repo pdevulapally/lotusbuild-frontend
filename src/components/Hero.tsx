@@ -1,26 +1,19 @@
 import { motion } from 'motion/react'
-import { Plus } from 'lucide-react'
+import markUrl from '../assets/lotusbuild-mark.png'
 import './Hero.css'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-const VIDEO_URL =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_215831_c6a8989c-d716-4d8d-8745-e972a2eec711.mp4'
-
 function LogoIcon() {
   return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
+    <img
+      className="hero-logo-mark"
+      src={markUrl}
+      width="28"
+      height="28"
+      alt=""
       aria-hidden="true"
-    >
-      <g transform="rotate(-35 12 12)">
-        <rect x="5" y="3" width="6" height="18" rx="3" fill="#000" />
-        <rect x="13" y="3" width="6" height="18" rx="3" fill="#000" />
-      </g>
-    </svg>
+    />
   )
 }
 
@@ -55,18 +48,11 @@ function Hero() {
             <LogoIcon />
             <span className="hero-brand">LotusBuild</span>
           </a>
+        </div>
 
-          <button type="button" className="hero-menu-btn">
-            <span className="hero-menu-circle">
-              <Plus size={12} strokeWidth={3} />
-            </span>
-            <span className="hero-menu-label">Menu</span>
-          </button>
-
-          <div className="hero-tags-pill">
-            <span>Plan &amp; build</span>
-            <span>Preview &amp; ship</span>
-          </div>
+        <div className="hero-tags-pill">
+          <span>Plan &amp; build</span>
+          <span>Preview &amp; ship</span>
         </div>
 
         <div className="hero-nav-right">
@@ -82,20 +68,6 @@ function Hero() {
           </div>
         </div>
       </motion.nav>
-
-      <div className="hero-video-wrap">
-        <motion.video
-          className="hero-video"
-          src={VIDEO_URL}
-          autoPlay
-          muted
-          playsInline
-          loop
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.8, ease: EASE }}
-        />
-      </div>
 
       <motion.div
         className="hero-footer"

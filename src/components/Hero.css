@@ -3,7 +3,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   background: #fff;
   overflow: hidden;
 }
@@ -49,36 +50,19 @@
   letter-spacing: -0.01em;
 }
 
-.hero-menu-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px 4px 4px;
-  border: none;
-  border-radius: 9999px;
-  background: #000;
-  color: #fff;
-}
-
-.hero-menu-circle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.hero-logo-mark {
+  display: block;
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  background: #fff;
-  color: #000;
-}
-
-.hero-menu-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: #fff;
+  object-fit: contain;
 }
 
 .hero-tags-pill {
   display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   align-items: center;
   gap: 16px;
   padding: 0 16px;
@@ -119,52 +103,30 @@
   color: #000;
 }
 
-/* Background video */
-
-.hero-video-wrap {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 80%;
-  height: 80%;
-  margin: auto;
-  overflow: hidden;
-}
-
-.hero-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Footer */
+/* Content */
 
 .hero-footer {
   position: relative;
   z-index: 30;
-  margin-top: auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 24px;
-  padding: 96px 16px 24px;
-  background: linear-gradient(
-    to top,
-    #ffffff 0%,
-    rgba(255, 255, 255, 0.8) 50%,
-    transparent 100%
-  );
+  padding: 24px 16px;
+  text-align: center;
 }
 
 .hero-footer-left {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 20px;
 }
 
 .hero-subtitle {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin: 0;
   font-size: 13px;
@@ -192,6 +154,7 @@
 .hero-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -219,6 +182,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -254,22 +218,14 @@
     height: 40px;
   }
 
-  .hero-menu-circle,
   .hero-grid-btn {
     width: 32px;
     height: 32px;
   }
 
-  .hero-video-wrap {
-    width: 100%;
-    height: 100%;
-  }
-
   .hero-footer {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding: 128px 32px 32px;
+    padding: 32px;
+    gap: 32px;
   }
 
   .hero-heading {
