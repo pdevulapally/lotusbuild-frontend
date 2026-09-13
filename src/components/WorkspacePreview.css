@@ -1,6 +1,6 @@
 .wp {
   width: 100%;
-  max-width: 980px;
+  max-width: 1280px;
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid #1c1c1c;
@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid #222;
   background: #141414;
 }
@@ -23,7 +23,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
@@ -43,23 +43,27 @@
 
 .wp-body {
   display: flex;
-  min-height: 380px;
+  min-height: 560px;
 }
 
 .wp-sessions {
   width: 200px;
   flex-shrink: 0;
-  padding: 14px 10px;
+  padding: 16px 10px;
   border-right: 1px solid #222;
 }
 
-.wp-col-label {
-  margin: 0 8px 10px;
+.wp-col-label,
+.wp-pane-bar span:first-child {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #6e6e6e;
+}
+
+.wp-col-label {
+  margin: 0 8px 10px;
 }
 
 .wp-sessions ul {
@@ -77,7 +81,7 @@
   grid-template-rows: auto auto;
   column-gap: 8px;
   width: 100%;
-  padding: 8px;
+  padding: 9px 8px;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -120,17 +124,19 @@
 
 .wp-main {
   display: flex;
-  flex: 1;
+  flex: 1.15;
   flex-direction: column;
   min-width: 0;
+  border-right: 1px solid #222;
 }
 
-.wp-filebar {
+.wp-filebar,
+.wp-pane-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 9px 16px;
+  padding: 9px 14px;
   border-bottom: 1px solid #222;
   background: #141414;
 }
@@ -141,16 +147,17 @@
   color: #c8c8c8;
 }
 
-.wp-run {
+.wp-run,
+.wp-pane-meta {
   font-size: 11px;
   color: #6e6e6e;
 }
 
 .wp-code {
   flex: 1;
-  padding: 16px 18px;
+  padding: 20px 18px;
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.7;
   color: #d4d4d4;
 }
@@ -203,9 +210,109 @@
   color: #bdbdbd;
 }
 
-@media (max-width: 767px) {
+.wp-side {
+  display: flex;
+  flex: 0.95;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wp-pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.wp-pane + .wp-pane {
+  border-top: 1px solid #222;
+}
+
+.wp-term {
+  flex: 1;
+  padding: 14px 16px;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #9a9a9a;
+}
+
+.wp-preview {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #0c0c0c;
+}
+
+.wp-app {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 260px;
+  padding: 14px;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  background: #161616;
+}
+
+.wp-app-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6e6e6e;
+}
+
+.wp-app strong {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.wp-app-btn {
+  width: fit-content;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #ececec;
+  color: #111;
+  font-size: 12px;
+}
+
+.wp-app-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 13px;
+}
+
+.wp-app-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.wp-app-row:first-child {
+  padding-top: 0;
+}
+
+.wp-app-row em {
+  font-style: normal;
+  color: #6e6e6e;
+}
+
+.wp-app-row b {
+  font-weight: 500;
+}
+
+@media (max-width: 1023px) {
   .wp-body {
-    flex-direction: column;
+    flex-wrap: wrap;
+    min-height: 0;
   }
 
   .wp-sessions {
@@ -223,13 +330,24 @@
     flex: 1;
   }
 
-  .wp-sessions button {
-    grid-template-columns: 8px 1fr;
+  .wp-main,
+  .wp-side {
+    flex: 1 1 100%;
+    min-height: 280px;
+    border-right: none;
+  }
+
+  .wp-main {
+    border-bottom: 1px solid #222;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (min-width: 1100px) {
   .wp {
-    transition: none;
+    max-width: 1360px;
+  }
+
+  .wp-body {
+    min-height: 620px;
   }
 }

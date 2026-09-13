@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { motion } from 'motion/react'
 import markUrl from '../assets/lotusbuild-mark.png'
 import './WorkspacePreview.css'
@@ -16,6 +16,9 @@ type Session = {
   code: string[]
   changed: number
   note: string
+  terminal: string[]
+  vmUrl: string
+  preview: () => ReactNode
 }
 
 const SESSIONS: Session[] = [
@@ -27,6 +30,12 @@ const SESSIONS: Session[] = [
     file: 'src/invoice.ts',
     changed: 1,
     note: 'Updating settle() to skip voided invoices.',
+    terminal: [
+      '$ npm test src/invoice.ts',
+      'PASS  settle skips void',
+      '2 passed',
+    ],
+    vmUrl: 'localhost:4173/invoices',
     code: [
       'export function settle(invoice: Invoice) {',
       '  if (invoice.status === "void") {',
@@ -36,6 +45,22 @@ const SESSIONS: Session[] = [
       '  return applyBalance(invoice)',
       '}',
     ],
+    preview: () => (
+      <div className="wp-app">
+        <div className="wp-app-row">
+          <span>INV-204</span>
+          <em>void</em>
+        </div>
+        <div className="wp-app-row">
+          <span>INV-205</span>
+          <b>$480.00</b>
+        </div>
+        <div className="wp-app-row">
+          <span>INV-206</span>
+          <b>$120.00</b>
+        </div>
+      </div>
+    ),
   },
   {
     id: 'auth',
@@ -45,6 +70,12 @@ const SESSIONS: Session[] = [
     file: 'src/session.ts',
     changed: 2,
     note: 'Session token refresh now fails closed.',
+    terminal: [
+      '$ npm test src/session.ts',
+      'PASS  refresh fails closed',
+      '1 passed',
+    ],
+    vmUrl: 'localhost:4173/login',
     code: [
       'export async function refresh(token: Token) {',
       '  const next = await issue(token)',
@@ -55,6 +86,13 @@ const SESSIONS: Session[] = [
       '  return next',
       '}',
     ],
+    preview: () => (
+      <div className="wp-app">
+        <span className="wp-app-label">Session</span>
+        <strong>Expired</strong>
+        <span className="wp-app-btn">Sign in again</span>
+      </div>
+    ),
   },
   {
     id: 'onboarding',
@@ -62,13 +100,31 @@ const SESSIONS: Session[] = [
     status: 'idle',
     run: '166',
     file: 'src/org.ts',
-    changed: 3,
+    changed: 1,
     note: 'Org invite accepts only members of the same org.',
+    terminal: [
+      '$ npm test src/org.ts',
+      'PASS  canInvite scopes to org',
+      '1 passed',
+    ],
+    vmUrl: 'localhost:4173/org/members',
     code: [
       'export function canInvite(actor: Member, org: Org) {',
       '  return actor.orgId === org.id',
       '}',
     ],
+    preview: () => (
+      <div className="wp-app">
+        <div className="wp-app-row">
+          <span>ada@acme</span>
+          <em>member</em>
+        </div>
+        <div className="wp-app-row">
+          <span>lin@acme</span>
+          <em>member</em>
+        </div>
+      </div>
+    ),
   },
 ]
 
@@ -95,7 +151,6 @@ function WorkspacePreview() {
   return (
     <motion.div
       className="wp"
-      id="desktop-demo"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       initial={{ y: 28, opacity: 0 }}
@@ -155,6 +210,30 @@ function WorkspacePreview() {
             <span className={`wp-st is-${session.status}`} />
             <p>{session.note}</p>
           </div>
+        </div>
+
+        <div className="wp-side">
+          <section className="wp-pane">
+            <div className="wp-pane-bar">
+              <span>VM</span>
+              <span className="wp-pane-meta">{session.vmUrl}</span>
+            </div>
+            <div className="wp-term">
+              {session.terminal.map((line) => (
+                <div key={line}>{line}</div>
+              ))}
+            </div>
+          </section>
+
+          <section className="wp-pane">
+            <div className="wp-pane-bar">
+              <span>Preview</span>
+              <span className="wp-pane-meta">User</span>
+            </div>
+            <div className="wp-preview" key={`preview-${session.id}`}>
+              {session.preview()}
+            </div>
+          </section>
         </div>
       </div>
     </motion.div>

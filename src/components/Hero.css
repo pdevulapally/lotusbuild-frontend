@@ -7,7 +7,7 @@
   align-items: center;
   padding: 128px 16px 72px;
   background: #fff;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Navbar */
@@ -241,7 +241,7 @@
   }
 
   .hero {
-    padding: 168px 32px 96px;
+    padding: 168px 24px 96px;
   }
 
   .hero-footer {
