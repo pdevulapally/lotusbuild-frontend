@@ -1,0 +1,14 @@
+{
+  "name": "lotusbuild-frontend",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "npm run dev -- --host 0.0.0.0 --port 5173",
+      "description": "Vite dev server for the lotusbuild-frontend app, served on http://localhost:5173"
+    }
+  ],
+  "ports": [
+    { "name": "vite dev server", "port": 5173 }
+  ]
+}
