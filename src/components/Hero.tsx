@@ -117,9 +117,9 @@ function Hero() {
             <button type="button" className="hero-btn hero-btn-primary">
               Start building
             </button>
-            <button type="button" className="hero-btn hero-btn-outline">
+            <a href="#how" className="hero-btn hero-btn-outline">
               Explore LotusBuild
-            </button>
+            </a>
           </motion.div>
         </div>
       </motion.div>

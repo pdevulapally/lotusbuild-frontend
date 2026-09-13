@@ -1,23 +1,33 @@
 .footer {
-  position: relative;
-  padding: 48px 16px;
-  background: #000;
-  color: #fff;
+  padding: 64px 16px 28px;
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  color: #111;
 }
 
 .footer-inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 24px;
+  gap: 40px;
   max-width: 980px;
   margin: 0 auto;
 }
 
-.footer-brand {
+.footer-brand-block {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-brand {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: #111;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
 }
 
 .footer-mark {
@@ -27,46 +37,64 @@
   object-fit: contain;
 }
 
-.footer-logo {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: #fff;
+.footer-tagline {
+  margin: 0;
+  max-width: 16rem;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .footer-nav {
   display: flex;
-  align-items: center;
-  gap: 24px;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.footer-link {
+.footer-nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.footer-nav a {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(0, 0, 0, 0.72);
   text-decoration: none;
-  transition: color 0.2s ease;
 }
 
-.footer-link:hover {
-  color: #fff;
+.footer-nav a:hover {
+  color: #111;
 }
 
-.footer-copy {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+.footer-base {
+  display: flex;
+  max-width: 980px;
+  margin: 48px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.footer-base p {
+  margin: 0;
 }
 
 @media (min-width: 768px) {
   .footer {
-    padding: 64px 32px;
+    padding: 80px 32px 32px;
   }
 
   .footer-inner {
     flex-direction: row;
     justify-content: space-between;
+    align-items: flex-start;
   }
 
   .footer-nav {
-    gap: 32px;
+    min-width: 140px;
   }
 }

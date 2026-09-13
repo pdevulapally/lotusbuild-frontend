@@ -172,11 +172,15 @@
 }
 
 .hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 13px 22px;
   border-radius: 9999px;
   font-size: 14px;
   font-weight: 500;
   line-height: 1;
+  text-decoration: none;
   transition:
     background 0.2s ease,
     color 0.2s ease,

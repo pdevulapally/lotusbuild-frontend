@@ -1,63 +1,48 @@
-import { motion } from 'motion/react'
 import './HowItWorks.css'
-
-const EASE = [0.16, 1, 0.3, 1] as const
 
 const STEPS = [
   {
-    num: '01',
-    title: 'Describe',
-    body: 'Start with a prompt. Describe what you want to build - a feature, an app, or a fix - in plain language.',
+    n: '01',
+    title: 'Prompt',
+    body: 'You describe the software. That message opens a session.',
   },
   {
-    num: '02',
+    n: '02',
     title: 'Plan',
-    body: 'LotusBuild generates a step-by-step plan: routes, data models, components. Review and refine before any code runs.',
+    body: 'LotusBuild writes the plan first: pages, data, and the work to do. You see it before the run starts.',
   },
   {
-    num: '03',
+    n: '03',
     title: 'Build',
-    body: 'Watch as code generates in a live sandbox. The workspace streams every file, test, and change in real time.',
+    body: 'The agent writes code in a sandbox. Files and a live preview show up in the workspace.',
   },
   {
-    num: '04',
-    title: 'Ship',
-    body: "Preview instantly. Iterate in the same thread. When it's ready, merge to production or export the full codebase.",
+    n: '04',
+    title: 'Review',
+    body: 'Same session, another prompt. Change the plan or the app, then preview again.',
   },
 ]
 
 function HowItWorks() {
   return (
-    <section className="how">
+    <section className="how" id="how">
       <div className="how-inner">
-        <motion.div
-          className="how-header"
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.8, ease: EASE }}
-        >
-          <h2 className="how-title">How it works</h2>
-          <p className="how-subtitle">
-            From idea to working software in four steps.
-          </p>
-        </motion.div>
+        <header className="how-header">
+          <span className="how-kicker">How it works</span>
+          <h2 className="how-title">Prompt. Plan. Build. Review.</h2>
+        </header>
 
         <div className="how-steps">
-          {STEPS.map((step, i) => (
-            <motion.div
-              key={step.num}
-              className="how-step"
-              initial={{ y: 24, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.7, delay: i * 0.1, ease: EASE }}
-            >
-              <span className="how-num">{step.num}</span>
-              <h3 className="how-step-title">{step.title}</h3>
-              <p className="how-step-body">{step.body}</p>
-            </motion.div>
-          ))}
+          <div className="how-rail" aria-hidden="true" />
+          <ol className="how-step-list">
+            {STEPS.map((step) => (
+              <li key={step.n} className="how-step">
+                <span className="how-num">{step.n}</span>
+                <h3 className="how-step-title">{step.title}</h3>
+                <p className="how-step-body">{step.body}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>
