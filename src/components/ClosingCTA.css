@@ -1,0 +1,83 @@
+.closing {
+  position: relative;
+  padding: 120px 16px;
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.closing-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.closing-content {
+  text-align: center;
+}
+
+.closing-title {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #000;
+}
+
+.closing-subtitle {
+  margin: 0 0 32px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.closing-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.closing-btn {
+  padding: 13px 22px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.closing-btn:hover {
+  transform: translateY(-1px);
+}
+
+.closing-btn-primary {
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+}
+
+.closing-btn-primary:hover {
+  background: #1a1a1a;
+}
+
+.closing-btn-outline {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: transparent;
+  color: #000;
+}
+
+.closing-btn-outline:hover {
+  border-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+@media (min-width: 768px) {
+  .closing {
+    padding: 160px 32px;
+  }
+}
