@@ -37,7 +37,7 @@ function GridIcon() {
 
 function Hero() {
   return (
-    <section className="hero">
+    <section className="hero" id="top">
       <motion.nav
         className="hero-nav"
         initial={{ y: -16, opacity: 0 }}
@@ -57,16 +57,12 @@ function Hero() {
         </div>
 
         <div className="hero-nav-right">
-          <div className="hero-right-pill">
-            <button
-              type="button"
-              className="hero-grid-btn"
-              aria-label="Workspace"
-            >
+          <a className="hero-right-pill" href="#workspace-demo" aria-label="Open workspace demo">
+            <span className="hero-grid-btn" aria-hidden="true">
               <GridIcon />
-            </button>
+            </span>
             <span className="hero-right-label">Workspace</span>
-          </div>
+          </a>
         </div>
       </motion.nav>
 

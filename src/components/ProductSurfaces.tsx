@@ -6,8 +6,8 @@ const SURFACES = [
     body: 'The job you come back to. Agent, history, and files stay in the session.',
   },
   {
-    name: 'Agent runs',
-    body: 'One pass of the agent. Logged against the session so you can see what changed.',
+    name: 'Agents',
+    body: 'See your agents, their subagents, assigned work, and status in one place.',
   },
   {
     name: 'Organizations',
