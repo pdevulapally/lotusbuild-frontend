@@ -111,9 +111,9 @@ struct Star {
 @fragment fn fs_stars(star: Star) -> @location(0) vec4f {
   let distance = length(star.local);
   let core = exp(-distance * distance * mix(9.0, 32.0, star.glow));
-  let halo = exp(-distance * distance * 4.0) * mix(0.12, 0.25, star.glow);
+  let halo = exp(-distance * distance * 4.0) * mix(0.28, 0.5, star.glow);
   let colour = mix(star.colour, vec3f(1.0), core * 0.45);
-  return vec4f(colour, (core + halo) * star.opacity * (1.0 - smoothstep(0.75, 1.0, distance)));
+  return vec4f(colour, clamp((core * 1.3 + halo) * star.opacity, 0.0, 1.0) * (1.0 - smoothstep(0.75, 1.0, distance)));
 }
 
 struct BlackHole {
