@@ -17,7 +17,7 @@
 
 .demo-session {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   height: 720px;
   border: 1px solid var(--demo-border);
   background: var(--demo-surface);
@@ -100,127 +100,43 @@
   border-color: rgba(0, 0, 0, 0.35);
 }
 
-/* Stage strip */
+/* Stage marks (shared by tabs and transcript markers) */
 
-.demo-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-bottom: 1px solid var(--demo-border);
-  background: var(--demo-chrome);
-}
-
-.demo-stage {
-  position: relative;
-  min-width: 0;
-}
-
-.demo-stage + .demo-stage {
-  border-left: 1px solid var(--demo-border-soft);
-}
-
-.demo-stage-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px 16px 14px;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  font-family: inherit;
-  color: var(--demo-text-sec);
-  transition: background-color 0.15s;
-}
-
-.demo-stage-btn:hover {
-  background: var(--demo-hover);
-}
-
-.demo-stage.is-viewed .demo-stage-btn {
-  background: var(--demo-surface);
-  color: var(--demo-text);
-}
-
-.demo-stage.is-viewed::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: #000;
-}
-
-.demo-stage-mark {
+.demo-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border: 1px solid var(--demo-border);
   border-radius: 50%;
-  font-size: 10.5px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  color: var(--demo-text-faint);
   background: var(--demo-surface);
 }
 
-.demo-stage.is-done .demo-stage-mark {
+.demo-mark.is-done {
   border-color: #000;
   background: #000;
 }
 
-.demo-stage.is-active .demo-stage-mark {
+.demo-mark.is-active {
   border-color: transparent;
   background: transparent;
 }
 
-.demo-stage-check {
-  width: 4px;
-  height: 8px;
-  margin-top: -2px;
+.demo-mark-check {
+  width: 3px;
+  height: 6px;
+  margin-top: -1px;
   border: solid #fff;
   border-width: 0 1.5px 1.5px 0;
   transform: rotate(45deg);
 }
 
-.demo-stage-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.demo-stage-label {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--demo-text);
-}
-
-.demo-stage.is-pending .demo-stage-label {
-  color: var(--demo-text-sec);
-}
-
-.demo-stage-sub {
-  font-size: 11px;
-  color: var(--demo-text-faint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.demo-stage.is-active .demo-stage-sub {
-  color: var(--demo-text-sec);
-}
-
 .demo-spinner {
   display: inline-block;
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   border: 1.5px solid var(--demo-border);
   border-top-color: var(--demo-text);
@@ -231,6 +147,76 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Stage tabs above the artifact */
+
+.demo-stage-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+
+.demo-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--demo-border-soft);
+}
+
+.demo-tabs-list {
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+}
+
+.demo-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 8px 10px;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--demo-text-sec);
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.demo-tab:hover,
+.demo-tab.is-selected {
+  color: var(--demo-text);
+}
+
+.demo-tab.is-pending {
+  color: var(--demo-text-faint);
+}
+
+.demo-tab.is-selected::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  background: #000;
+}
+
+.demo-tabs-sub {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--demo-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Artifact area */
@@ -699,14 +685,6 @@
   background: var(--demo-chrome);
 }
 
-.demo-chat-label {
-  padding: 10px 16px 6px;
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--demo-text-faint);
-}
 
 .demo-chat-scroll {
   flex: 1;
@@ -714,7 +692,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 4px 16px 12px;
+  padding: 14px 16px 12px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
@@ -804,6 +782,58 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.demo-marker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  margin: 4px 0;
+  padding: 6px 8px;
+  border: 1px solid var(--demo-border-soft);
+  border-radius: 8px;
+  background: var(--demo-surface);
+  font-family: inherit;
+  font-size: 11.5px;
+  text-align: left;
+  color: var(--demo-text-sec);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.demo-marker:hover {
+  border-color: var(--demo-border);
+}
+
+.demo-marker.is-selected {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.demo-marker-label {
+  font-weight: 500;
+  color: var(--demo-text);
+}
+
+.demo-marker-sub {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--demo-text-faint);
+}
+
+.demo-marker-open {
+  font-size: 10.5px;
+  color: var(--demo-text-faint);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.demo-marker:hover .demo-marker-open {
+  opacity: 1;
 }
 
 .demo-msg-typing {
@@ -954,7 +984,7 @@
 
   .demo-body {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 400px 320px;
+    grid-template-rows: 440px 320px;
   }
 
   .demo-chat {
@@ -979,20 +1009,21 @@
     margin-left: auto;
   }
 
-  .demo-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .demo-tabs {
+    padding: 0 10px;
   }
 
-  .demo-stage:nth-child(n + 3) {
-    border-top: 1px solid var(--demo-border-soft);
+  .demo-tabs-list {
+    flex: 1;
+    justify-content: space-between;
   }
 
-  .demo-stage:nth-child(3) {
-    border-left: 0;
+  .demo-tab {
+    padding: 10px 6px 9px;
   }
 
-  .demo-stage-btn {
-    padding: 10px 12px;
+  .demo-tabs-sub {
+    display: none;
   }
 
   .demo-doc,

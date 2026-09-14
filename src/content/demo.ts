@@ -91,6 +91,7 @@ export const session = {
   replayLabel: 'Replay',
   railLabel: 'Conversation',
   agentName: 'LotusBuild',
+  openLabel: 'Open',
   composer: {
     placeholder: 'Ask for a change…',
     hint: 'Enter to send',

@@ -1,6 +1,6 @@
 import { session, stages } from '../../content/demo.ts'
 import ArtifactView from './Artifacts.tsx'
-import StageStrip from './StageStrip.tsx'
+import StageTabs from './StageTabs.tsx'
 import Conversation from './Conversation.tsx'
 import type { SessionState } from './useSession.ts'
 import './demo.css'
@@ -8,7 +8,7 @@ import './demo.css'
 function SessionDemo({
   viewIndex,
   runKey,
-  messages,
+  transcript,
   working,
   progressOf,
   select,
@@ -16,6 +16,7 @@ function SessionDemo({
   replay,
 }: SessionState) {
   const viewed = stages[viewIndex]
+  const selectIndex = (i: number) => select(stages[i].id)
 
   return (
     <div className="demo-session">
@@ -33,21 +34,29 @@ function SessionDemo({
         </button>
       </div>
 
-      <StageStrip
-        stages={stages}
-        viewIndex={viewIndex}
-        progressOf={progressOf}
-        onSelect={(i) => select(stages[i].id)}
-      />
-
       <div className="demo-body">
-        <Conversation messages={messages} working={working} onSend={send} />
-        <div className="demo-artifact-area">
-          <ArtifactView
-            artifact={viewed.artifact}
-            artifactKey={`${viewed.id}-${runKey}`}
-            progress={progressOf(viewIndex)}
+        <Conversation
+          transcript={transcript}
+          viewIndex={viewIndex}
+          working={working}
+          progressOf={progressOf}
+          onSelect={selectIndex}
+          onSend={send}
+        />
+        <div className="demo-stage-pane">
+          <StageTabs
+            stages={stages}
+            viewIndex={viewIndex}
+            progressOf={progressOf}
+            onSelect={selectIndex}
           />
+          <div className="demo-artifact-area">
+            <ArtifactView
+              artifact={viewed.artifact}
+              artifactKey={`${viewed.id}-${runKey}`}
+              progress={progressOf(viewIndex)}
+            />
+          </div>
         </div>
       </div>
     </div>

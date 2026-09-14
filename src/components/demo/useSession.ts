@@ -4,6 +4,7 @@ import {
   session,
   stages,
   type Message,
+  type Stage,
   type StageId,
 } from '../../content/demo.ts'
 import type { Progress } from './Artifacts.tsx'
@@ -13,10 +14,19 @@ const MESSAGE_GAP_MS = 750
 
 const noneRevealed = () => stages.map(() => 0)
 
+export function stageSub(stage: Stage, progress: Progress) {
+  if (progress === 'active') return stage.working
+  if (progress === 'done') return stage.done
+  return stage.pending
+}
+
+/** Messages grouped by the stage the agent was on; `stage` is null for the user's own follow-ups. */
+export type TranscriptGroup = { stage: number | null; messages: Message[] }
+
 export type SessionState = {
   viewIndex: number
   runKey: number
-  messages: Message[]
+  transcript: TranscriptGroup[]
   working: boolean
   progressOf: (index: number) => Progress
   select: (id: StageId) => void
@@ -116,15 +126,15 @@ export function useSession(): SessionState {
     setRunKey((k) => k + 1)
   }, [])
 
-  const messages: Message[] = [
-    ...stages.flatMap((s, k) => s.messages.slice(0, revealed[k])),
-    ...replies,
-  ]
+  const transcript: TranscriptGroup[] = stages
+    .map((s, k) => ({ stage: k, messages: s.messages.slice(0, revealed[k]) }))
+    .filter((g) => g.messages.length > 0)
+  if (replies.length > 0) transcript.push({ stage: null, messages: replies })
 
   return {
     viewIndex,
     runKey,
-    messages,
+    transcript,
     working: progressOf(LAST_AGENT_STAGE) !== 'done',
     progressOf,
     select,
