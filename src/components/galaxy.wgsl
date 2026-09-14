@@ -30,12 +30,24 @@ fn galaxyScale() -> f32 { return max(params.resolution.x, params.resolution.y) *
 fn noise(p: vec2f) -> f32 {
   let cell = floor(p);
   let f = fract(p);
-  let u = f * f * (3.0 - 2.0 * f);
+  let u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
   let a = fract(sin(dot(cell, vec2f(127.1, 311.7))) * 43758.5453);
   let b = fract(sin(dot(cell + vec2f(1.0, 0.0), vec2f(127.1, 311.7))) * 43758.5453);
   let c = fract(sin(dot(cell + vec2f(0.0, 1.0), vec2f(127.1, 311.7))) * 43758.5453);
   let d = fract(sin(dot(cell + vec2f(1.0), vec2f(127.1, 311.7))) * 43758.5453);
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+fn cloudDetail(position: vec2f) -> f32 {
+  var p = position;
+  var density = 0.0;
+  var weight = 0.55;
+  for (var octave = 0u; octave < 4u; octave++) {
+    density += noise(p) * weight;
+    p = rotate(p, 0.71) * 2.05 + vec2f(17.1, 9.2);
+    weight *= 0.48;
+  }
+  return density;
 }
 
 struct Sky { @builtin(position) position: vec4f, @location(0) uv: vec2f }
@@ -53,11 +65,22 @@ struct Sky { @builtin(position) position: vec4f, @location(0) uv: vec2f }
   let p = rotated / vec2f(1.0, 0.43);
   let radius = length(p);
   let angle = atan2(p.y, p.x);
-  let arms = pow(0.5 + 0.5 * cos(angle * 3.0 - radius * 10.0 - params.time * 0.005), 7.0);
-  let texture = noise(p * 7.0) * 0.55 + noise(p * 19.0) * 0.3 + noise(p * 47.0) * 0.15;
-  let dust = exp(-radius * 2.8) * (0.16 + arms * 0.84) * (0.3 + texture * 0.85);
-  let core = exp(-radius * radius * 150.0);
-  let glow = params.nebula * dust * 0.8 + params.starWarm * core * 0.065;
+  // Uneven clouds and dark lanes break up the smooth, ribbon-like spiral.
+  let warp = (vec2f(noise(p * 3.0), noise(p * 3.0 + 27.8)) - 0.5) * 0.18;
+  let clouds = cloudDetail(p * 11.0 + warp);
+  let filaments = cloudDetail(p * 30.0 + warp * 2.0);
+  let phase = angle * 3.0 - radius * 10.0 - params.time * 0.005 + (clouds - 0.5) * 1.1;
+  let arms = pow(0.5 + 0.5 * cos(phase), 9.0);
+  let disk = exp(-radius * 2.4) * (1.0 - smoothstep(0.95, 1.4, radius));
+  let dustLane = pow(0.5 + 0.5 * cos(phase + 0.4), 18.0) * smoothstep(0.25, 0.65, filaments);
+  let transmission = 1.0 - dustLane * 0.82;
+  let cloudLight = arms * pow(clouds, 1.6) * (0.5 + filaments) * 1.8;
+  let bulge = exp(-radius * radius * 90.0);
+  let nucleus = exp(-radius * radius * 1600.0);
+  let diffuse = params.nebula * disk * (0.025 + cloudLight * 0.9);
+  let clusters = params.starCool * disk * arms * pow(filaments, 4.0) * 0.12;
+  let core = params.starWarm * bulge * 0.08 + mix(params.starWarm, params.starCool, 0.45) * nucleus * 0.13;
+  let glow = (diffuse + clusters + core) * transmission;
   return vec4f(params.background + glow, 1.0);
 }
 
@@ -93,7 +116,7 @@ struct Star {
   center += (params.pointer - params.resolution * 0.5) * depth * 0.025 * params.influence;
 
   let bright = step(0.965, random(seed + 3u));
-  let radius = mix(2.4, 6.48, depth * depth) + bright * 9.9;
+  let radius = mix(2.76, 7.452, depth * depth) + bright * 11.385;
   let normalized = center / params.resolution;
   let readingSpace = mix(0.4, 1.0, smoothstep(0.08, 0.4, abs(normalized.x - 0.5)));
   var out: Star;
@@ -110,10 +133,14 @@ struct Star {
 
 @fragment fn fs_stars(star: Star) -> @location(0) vec4f {
   let distance = length(star.local);
-  let core = exp(-distance * distance * mix(9.0, 32.0, star.glow));
-  let halo = exp(-distance * distance * 4.0) * mix(0.28, 0.5, star.glow);
-  let colour = mix(star.colour, vec3f(1.0), core * 0.45);
-  return vec4f(colour, clamp((core * 1.3 + halo) * star.opacity, 0.0, 1.0) * (1.0 - smoothstep(0.75, 1.0, distance)));
+  // Defined light centres with a pixel-wide antialiased edge, not blurred discs.
+  let coreRadius = mix(0.25, 0.13, star.glow);
+  let edge = max(fwidth(distance) * 0.5, 0.001);
+  let core = 1.0 - smoothstep(coreRadius - edge, coreRadius + edge, distance);
+  let halo = exp(-distance * distance * 48.0) * mix(0.04, 0.12, star.glow);
+  let hotCentre = 1.0 - smoothstep(0.0, coreRadius, distance);
+  let colour = mix(star.colour, vec3f(1.0), hotCentre * 0.85);
+  return vec4f(colour, clamp((core * 2.5 + halo) * star.opacity, 0.0, 1.0) * (1.0 - smoothstep(0.75, 1.0, distance)));
 }
 
 struct BlackHole {

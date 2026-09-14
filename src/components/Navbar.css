@@ -13,6 +13,17 @@
   background: var(--surface);
 }
 
+@supports (backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px)) {
+  .navbar {
+    background: color-mix(in srgb, var(--surface) 78%, transparent);
+    border-color: color-mix(in srgb, var(--text-primary) 18%, var(--border));
+    -webkit-backdrop-filter: blur(16px) saturate(110%);
+    backdrop-filter: blur(16px) saturate(110%);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--space-background) 28%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent);
+  }
+}
+
 .navbar a {
   display: inline-flex;
   align-items: center;
@@ -22,8 +33,8 @@
 }
 
 .navbar a:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
 .navbar-brand {
@@ -56,6 +67,32 @@
 
 .navbar-workspace:hover {
   background-color: var(--action-hover);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .navbar {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .navbar {
+    background: Canvas;
+    border-color: CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .navbar a:focus-visible { outline-color: Highlight; }
+
+  .navbar-workspace {
+    outline: 1px solid ButtonText;
+    outline-offset: -4px;
+  }
 }
 
 @media (max-width: 767px) {
