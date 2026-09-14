@@ -1,3 +1,23 @@
+:root {
+  color-scheme: dark;
+  --space-background: #05080f;
+  --space-nebula: #203c51;
+  --space-star-cool: #a4c9ff;
+  --space-star-warm: #ffd39a;
+  --space-star-red: #ed9878;
+  --surface: #10151e;
+  --surface-raised: #19212d;
+  --surface-hover: #242f3e;
+  --text-primary: #f3f5f7;
+  --text-secondary: #b6bfcc;
+  --text-muted: #939fae;
+  --border: #2b3543;
+  --focus: #c6dcf5;
+  --action-background: #f3f5f7;
+  --action-text: #10151e;
+  --action-hover: #d9e0e8;
+}
+
 *,
 *::before,
 *::after {
@@ -20,8 +40,8 @@ body,
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-weight: 400;
-  color: #000;
-  background: #fff;
+  color: var(--text-primary);
+  background: var(--space-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -29,4 +49,24 @@ body {
 button {
   font-family: inherit;
   cursor: pointer;
+}
+
+.landing-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+
+.galaxy-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.galaxy-background[data-render-state='error'] {
+  visibility: hidden;
 }

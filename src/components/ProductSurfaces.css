@@ -1,13 +1,13 @@
 .surfaces {
   padding: 0 16px 96px;
-  background: #fff;
+  background: transparent;
 }
 
 .surfaces-inner {
   max-width: 980px;
   margin: 0 auto;
   padding-top: 40px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .surfaces-kicker {
@@ -16,7 +16,7 @@
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.4);
+  color: var(--text-muted);
 }
 
 .surfaces-grid {
@@ -30,7 +30,7 @@
   font-size: 20px;
   font-weight: 500;
   letter-spacing: -0.025em;
-  color: #111;
+  color: var(--text-primary);
 }
 
 .surfaces-grid p {
@@ -38,7 +38,7 @@
   max-width: 32ch;
   font-size: 14px;
   line-height: 1.55;
-  color: rgba(0, 0, 0, 0.55);
+  color: var(--text-secondary);
 }
 
 @media (min-width: 768px) {

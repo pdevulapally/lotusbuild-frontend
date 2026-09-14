@@ -1,7 +1,7 @@
-.closing { padding: 56px 24px 72px; background: #fff; }
-.closing-inner { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 1120px; margin: 0 auto; padding: 80px 32px; border-radius: 28px; background: #f7f7f7; text-align: center; }
-.closing-title { max-width: 14ch; margin: 0; font-size: clamp(32px, 5vw, 56px); font-weight: 400; letter-spacing: -.045em; line-height: 1.12; color: #111; }
-.closing-inner p { margin: 0; max-width: 34rem; color: #666; font-size: 15px; line-height: 1.7; }
+.closing { padding: 56px 24px 72px; background: transparent; }
+.closing-inner { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 1120px; margin: 0 auto; padding: 80px 32px; border-radius: 28px; background: var(--surface); text-align: center; }
+.closing-title { max-width: 14ch; margin: 0; font-size: clamp(32px, 5vw, 56px); font-weight: 400; letter-spacing: -.045em; line-height: 1.12; color: var(--text-primary); }
+.closing-inner p { margin: 0; max-width: 34rem; color: var(--text-secondary); font-size: 15px; line-height: 1.7; }
 .closing-inner a { margin-top: 6px; padding: 14px 22px; }
-.closing a:focus-visible { outline: 2px solid #555; outline-offset: 4px; }
+.closing a:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 @media (max-width: 600px) { .closing { padding: 32px 16px 48px; } .closing-inner { padding: 52px 22px; } }

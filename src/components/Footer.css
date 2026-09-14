@@ -1,12 +1,12 @@
-.footer { padding: 40px 24px 28px; background: #fff; color: #222; }
+.footer { padding: 40px 24px 28px; background: transparent; color: var(--text-primary); }
 .footer-inner, .footer-base { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; max-width: 1120px; margin: 0 auto; }
-.footer-brand { display: inline-flex; align-items: center; gap: 10px; color: #111; font-size: 17px; font-weight: 500; letter-spacing: -.025em; text-decoration: none; }
-.footer-mark { display: block; width: 26px; height: 26px; object-fit: contain; }
-.footer-intro p { max-width: 260px; margin: 16px 0 0; color: #707070; font-size: 13px; line-height: 1.8; }
+.footer-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text-primary); font-size: 17px; font-weight: 500; letter-spacing: -.025em; text-decoration: none; }
+.footer-mark { display: block; width: 26px; height: 26px; object-fit: contain; filter: invert(1); }
+.footer-intro p { max-width: 260px; margin: 16px 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.8; }
 .footer-nav { display: grid; grid-template-columns: repeat(2, auto); gap: 18px 48px; padding-top: 4px; }
-.footer-nav a, .footer-base a { color: #626262; font-size: 13px; text-decoration: none; }
-.footer-nav a:hover, .footer-base a:hover { color: #111; text-decoration: underline; text-underline-offset: 4px; }
-.footer-base { margin-top: 56px; padding-top: 22px; border-top: 1px solid #eee; align-items: center; color: #777; font-size: 12px; }
+.footer-nav a, .footer-base a { color: var(--text-secondary); font-size: 13px; text-decoration: none; }
+.footer-nav a:hover, .footer-base a:hover { color: var(--text-primary); text-decoration: underline; text-underline-offset: 4px; }
+.footer-base { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--border); align-items: center; color: var(--text-muted); font-size: 12px; }
 .footer-base p { margin: 0; }
-.footer a:focus-visible { outline: 2px solid #555; outline-offset: 4px; border-radius: 3px; }
+.footer a:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 3px; }
 @media (max-width: 600px) { .footer { padding: 28px 24px; } .footer-inner { flex-direction: column; } .footer-nav { gap: 18px 32px; } .footer-base { flex-wrap: wrap; gap: 16px; margin-top: 36px; } }
