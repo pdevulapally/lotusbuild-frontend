@@ -1,0 +1,15 @@
+:root {
+  --page: #f7f5f3;
+  --surface: #eeebe6;
+  --card: #f5f3ef;
+  --ink: #262626;
+  --muted: #625f5c;
+  --line: #dcd8d2;
+  --line-subtle: #e7e3dd;
+  --accent: #c73500;
+  --font-display: "Libre Caslon Condensed", Georgia, serif;
+  --font-body: "Public Sans Variable", Arial, sans-serif;
+  --radius: 14px;
+  --page-width: 1440px;
+  --section-gap: 160px;
+}
