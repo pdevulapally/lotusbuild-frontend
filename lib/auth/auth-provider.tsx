@@ -5,7 +5,7 @@ import {onIdTokenChanged, signOut, type User} from "firebase/auth";
 
 import {ApiError} from "@/lib/api/client";
 import {getMe, type Me} from "@/lib/api/me";
-import {auth} from "@/lib/firebase/client";
+import {firebaseAuth} from "@/lib/firebase/client";
 
 import {AUTH_HINT_COOKIE} from "./cookie";
 import {classifyAuthError, type AuthProblem} from "./problems";
@@ -42,12 +42,12 @@ export function AuthProvider({children}: {children: ReactNode}) {
     pendingNotice.current = notice ?? null;
     loadedUid.current = null;
     writeHintCookie(false);
-    await signOut(auth);
+    await signOut(firebaseAuth());
   }, []);
 
   const withToken = useCallback(
     async <T,>(call: (token: string) => Promise<T>): Promise<T> => {
-      const user = auth.currentUser;
+      const user = firebaseAuth().currentUser;
       if (!user) throw new ApiError(401, "auth/missing-token", "Not signed in.");
       try {
         return await call(await user.getIdToken());
@@ -97,7 +97,7 @@ export function AuthProvider({children}: {children: ReactNode}) {
 
   useEffect(
     () =>
-      onIdTokenChanged(auth, user => {
+      onIdTokenChanged(firebaseAuth(), user => {
         writeHintCookie(user !== null);
         if (!user) {
           loadedUid.current = null;
@@ -112,7 +112,7 @@ export function AuthProvider({children}: {children: ReactNode}) {
   );
 
   const refreshAccount = useCallback(async () => {
-    const user = auth.currentUser;
+    const user = firebaseAuth().currentUser;
     if (!user) return null;
     await user.reload();
     await user.getIdToken(true);

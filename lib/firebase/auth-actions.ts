@@ -7,7 +7,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 
-import {auth} from "@/lib/firebase/client";
+import {firebaseAuth} from "@/lib/firebase/client";
 
 // Firebase codes mapped to messages. Anything unmapped gets one generic message,
 // so no internal detail reaches the page.
@@ -30,13 +30,13 @@ export function authErrorMessage(error: unknown): string | null {
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  await signInWithEmailAndPassword(auth, email, password);
+  await signInWithEmailAndPassword(firebaseAuth(), email, password);
 }
 
 // Creates the account, stores the name on the profile so the ID token carries it,
 // and sends the verification link the backend requires before a build can start.
 export async function signUpWithEmail(displayName: string, email: string, password: string) {
-  const credential = await createUserWithEmailAndPassword(auth, email, password);
+  const credential = await createUserWithEmailAndPassword(firebaseAuth(), email, password);
   const name = displayName.trim();
   if (name) {
     await updateProfile(credential.user, {displayName: name});
@@ -46,5 +46,5 @@ export async function signUpWithEmail(displayName: string, email: string, passwo
 }
 
 export async function signInWithGoogle() {
-  await signInWithPopup(auth, new GoogleAuthProvider());
+  await signInWithPopup(firebaseAuth(), new GoogleAuthProvider());
 }
