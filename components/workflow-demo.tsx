@@ -178,7 +178,7 @@ function StorefrontPreview({stage, compiling}: {stage: number; compiling: boolea
         <div className="flex flex-1 flex-col">
           <div className={`tab-panel px-4 pb-4 pt-3 transition-colors duration-700 ${dark ? "bg-[#1d1714] text-[#fbf7f2]" : ""}`}>
             <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] opacity-70"><span>Ridge Coffee Roasters</span><span>Shop</span></div>
-            <p className="mt-3 font-display text-[21px] font-bold leading-tight tracking-tight">Featured blend: Ridge Blend</p>
+            <p className={`mt-3 font-display text-[21px] font-bold leading-tight tracking-tight ${dark ? "text-[#fbf7f2]" : "text-ink"}`}>Featured blend: Ridge Blend</p>
             <p className={`mt-1 text-[11px] ${dark ? "text-[#fbf7f2]/65" : "text-[#8a7f76]"}`}>Roasted on Mondays, shipped by Wednesday.</p>
             {dark && <span className="tab-panel mt-3 inline-block rounded-full bg-[#fbf7f2] px-3 py-1.5 text-[10.5px] font-medium text-[#1d1714]">Order now</span>}
           </div>
