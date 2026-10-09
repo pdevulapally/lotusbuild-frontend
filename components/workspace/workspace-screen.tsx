@@ -3,15 +3,16 @@
 import {useEffect, useState} from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {notFound, useRouter} from "next/navigation";
-import {onAuthStateChanged, signOut} from "firebase/auth";
+import {notFound} from "next/navigation";
+import type {User} from "firebase/auth";
 
 import {AiInput} from "@/components/ai-input";
+import {AuthLoading, RequireAuth} from "@/components/auth/require-auth";
 import {ProjectSession} from "@/components/workspace/project-session";
-import {getMe, type Me} from "@/lib/api/me";
+import type {Me} from "@/lib/api/me";
 import {ApiError} from "@/lib/api/client";
 import {getProject, listProjects, type Project} from "@/lib/api/projects";
-import {auth} from "@/lib/firebase/client";
+import {useAuth} from "@/lib/auth/auth-provider";
 
 // Brand-palette colours for the initials avatar. The colour is picked from the UID,
 // so each account keeps the same colour on every visit.
@@ -35,7 +36,7 @@ type View =
   | {status: "loading"}
   | {status: "missing"}
   | {status: "error"; message: string}
-  | {status: "ready"; me: Me; photoUrl: string | null; projects: Project[]; activeProject: Project | null};
+  | {status: "ready"; projects: Project[]; activeProject: Project | null};
 
 function Avatar({me, photoUrl}: {me: Me; photoUrl: string | null}) {
   if (photoUrl) {
@@ -55,12 +56,13 @@ function Avatar({me, photoUrl}: {me: Me; photoUrl: string | null}) {
       aria-hidden="true"
       style={{backgroundColor: avatarColor(me.uid)}}
       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-paper">
-      {initials(me.displayName ?? "")}
+      {initials(me.displayName ?? me.email)}
     </span>
   );
 }
 
 function AccountMenu({me, photoUrl}: {me: Me; photoUrl: string | null}) {
+  const {signOutUser} = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -83,7 +85,7 @@ function AccountMenu({me, photoUrl}: {me: Me; photoUrl: string | null}) {
           <button
             type="button"
             role="menuitem"
-            onClick={() => signOut(auth)}
+            onClick={() => void signOutUser()}
             className="rounded-xl px-3 py-2.5 text-left text-[15px] text-ink transition-colors duration-150 hover:bg-line/40">
             Sign out
           </button>
@@ -187,43 +189,48 @@ type WorkspaceScreenProps = {
   projectId?: string;
 };
 
-export function WorkspaceScreen({routeId, isOwnRoute, projectId}: WorkspaceScreenProps) {
-  const router = useRouter();
+// Signed-in only: RequireAuth redirects everyone else before this renders.
+export function WorkspaceScreen(props: WorkspaceScreenProps) {
+  return <RequireAuth>{({user, me}) => <WorkspaceBody {...props} user={user} me={me} />}</RequireAuth>;
+}
+
+function WorkspaceBody({routeId, isOwnRoute, projectId, user, me}: WorkspaceScreenProps & {user: User; me: Me}) {
+  const {withToken} = useAuth();
   const [view, setView] = useState<View>({status: "loading"});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "name">("newest");
   const [isCompact, setIsCompact] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const photoUrl = me.photoUrl ?? user.photoURL;
 
-  useEffect(
-    () =>
-      onAuthStateChanged(auth, async user => {
-        if (!user) {
-          router.replace("/sign-in");
+  useEffect(() => {
+    if (isOwnRoute && routeId && !isOwnRoute(me, routeId)) {
+      setView({status: "missing"});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const projects = await withToken(listProjects);
+        const activeProject = projectId ? await withToken(token => getProject(token, projectId)) : null;
+        if (!cancelled) setView({status: "ready", projects, activeProject});
+      } catch (error) {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.status === 404) {
+          setView({status: "missing"});
           return;
         }
-        try {
-          const token = await user.getIdToken();
-          const me = await getMe(token);
-          if (isOwnRoute && routeId && !isOwnRoute(me, routeId)) {
-            setView({status: "missing"});
-            return;
-          }
-          const projects = await listProjects(token);
-          const activeProject = projectId ? await getProject(token, projectId) : null;
-          setView({status: "ready", me, photoUrl: user.photoURL, projects, activeProject});
-        } catch (error) {
-          if (error instanceof ApiError && error.status === 404) {
-            setView({status: "missing"});
-            return;
-          }
-          setView({status: "error", message: "Could not load your workspace. Refresh the page to try again."});
-        }
-      }),
+        // 401/403 are handled by the provider (sign-out or verify-email redirect).
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) return;
+        setView({status: "error", message: "Could not load your workspace. Refresh the page to try again."});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // isOwnRoute is defined by each route file as a module-level function, so it is stable.
-    [isOwnRoute, routeId, projectId, router],
-  );
+  }, [isOwnRoute, routeId, projectId, me, withToken]);
 
   // Cmd+K (macOS) or Ctrl+K opens the project search on desktop.
   useEffect(() => {
@@ -239,9 +246,7 @@ export function WorkspaceScreen({routeId, isOwnRoute, projectId}: WorkspaceScree
 
   if (view.status === "missing") notFound();
 
-  if (view.status === "loading") {
-    return <main className="flex min-h-screen items-center justify-center text-[15px] text-muted">Loading…</main>;
-  }
+  if (view.status === "loading") return <AuthLoading />;
 
   if (view.status === "error") {
     return (
@@ -251,7 +256,7 @@ export function WorkspaceScreen({routeId, isOwnRoute, projectId}: WorkspaceScree
     );
   }
 
-  const {me, photoUrl, projects, activeProject} = view;
+  const {projects, activeProject} = view;
   const visibleProjects = [...projects].sort((a, b) =>
     sortBy === "name" ? a.name.localeCompare(b.name) : b.createdAt.localeCompare(a.createdAt),
   );
@@ -384,7 +389,7 @@ export function WorkspaceScreen({routeId, isOwnRoute, projectId}: WorkspaceScree
         ) : (
           <div className="flex w-full max-w-2xl flex-col items-center gap-12">
             <h1 className="text-center font-sans text-4xl font-bold leading-[1.02] tracking-[-0.03em] sm:text-6xl">
-              Welcome back, {me.displayName}
+              Welcome back{me.displayName ? `, ${me.displayName}` : ""}
             </h1>
             <AiInput label="Describe what you want to build" className="max-w-2xl" />
           </div>

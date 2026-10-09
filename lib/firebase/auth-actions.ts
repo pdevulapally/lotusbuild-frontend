@@ -4,6 +4,7 @@ import {
   sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
+  updateProfile,
 } from "firebase/auth";
 
 import {auth} from "@/lib/firebase/client";
@@ -17,6 +18,7 @@ const messages: Record<string, string> = {
   "auth/weak-password": "Choose a stronger password.",
   "auth/too-many-requests": "Too many attempts. Try again later.",
   "auth/network-request-failed": "Network error. Check your connection and try again.",
+  "auth/user-disabled": "This account has been disabled.",
 };
 const GENERIC_ERROR = "Something went wrong. Try again.";
 
@@ -31,10 +33,15 @@ export async function signInWithEmail(email: string, password: string) {
   await signInWithEmailAndPassword(auth, email, password);
 }
 
-// Creates the account and sends the verification link. The backend requires a
-// verified email before a build can start.
-export async function signUpWithEmail(email: string, password: string) {
+// Creates the account, stores the name on the profile so the ID token carries it,
+// and sends the verification link the backend requires before a build can start.
+export async function signUpWithEmail(displayName: string, email: string, password: string) {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
+  const name = displayName.trim();
+  if (name) {
+    await updateProfile(credential.user, {displayName: name});
+    await credential.user.getIdToken(true);
+  }
   await sendEmailVerification(credential.user);
 }
 

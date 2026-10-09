@@ -1,8 +1,8 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import {auth} from "@/lib/firebase/client";
 import {ApiError} from "@/lib/api/client";
+import {useAuth} from "@/lib/auth/auth-provider";
 import {readSessionEvents} from "@/lib/api/session-events";
 import {type SessionStatus} from "@/lib/api/sessions";
 import {activityLabel, applyActivityEvent, emptyActivity} from "@/lib/session-activity";
@@ -11,6 +11,8 @@ export function SessionActivity({sessionId, status}: {sessionId: string; status:
   const [activity, setActivity] = useState(emptyActivity);
   const [connected, setConnected] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [refused, setRefused] = useState<string | null>(null);
+  const {withToken} = useAuth();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -19,23 +21,28 @@ export function SessionActivity({sessionId, status}: {sessionId: string; status:
     let failures = 0;
     async function connect() {
       try {
-        const user = auth.currentUser;
-        if (!user) throw new Error("Not signed in");
-        await readSessionEvents(await user.getIdToken(), sessionId, controller.signal,
+        // A 401 at connect is retried once with a refreshed token by withToken; a second one signs out.
+        await withToken(token => readSessionEvents(token, sessionId, controller.signal,
           event => {
             cursor = event.id;
             setActivity(current => applyActivityEvent(current, event));
-          }, () => {setConnected(true); failures = 0;}, cursor);
+          }, () => {setConnected(true); failures = 0;}, cursor));
       } catch (error) {
         if (controller.signal.aborted) return;
         setConnected(false);
-        if (error instanceof ApiError && [401, 403, 404].includes(error.status)) return;
+        if (error instanceof ApiError && error.status === 401) return;
+        if (error instanceof ApiError && error.status === 403) {
+          setRefused(error.code === "auth/email-not-verified"
+            ? "Verify your email to follow the agent's activity." : "You do not have access to this session's activity.");
+          return;
+        }
+        if (error instanceof ApiError && error.status === 404) return;
         timer = setTimeout(connect, Math.min(30_000, 1000 * 2 ** Math.min(failures++, 5)));
       }
     }
     void connect();
     return () => {controller.abort(); clearTimeout(timer);};
-  }, [sessionId, attempt]);
+  }, [sessionId, attempt, withToken]);
 
   const label = activityLabel(status, activity, connected);
   const animate = connected && status === "RUNNING" &&
@@ -69,7 +76,8 @@ export function SessionActivity({sessionId, status}: {sessionId: string; status:
           {activity.previewReady && <p className="mt-2">Preview ready</p>}
         </div>
       </details>
-      {!connected && <button type="button" onClick={() => setAttempt(value => value + 1)}
+      {refused && <p role="alert" className="mt-2">{refused}</p>}
+      {!connected && !refused && <button type="button" onClick={() => setAttempt(value => value + 1)}
         className="mt-2 rounded-md underline underline-offset-4">Reconnect activity</button>}
     </div>
   );
