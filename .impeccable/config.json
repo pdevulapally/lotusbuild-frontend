@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "app/globals.css"
+        ],
+        "createdAt": "2026-10-09T20:46:28.987Z",
+        "reason": "shimmer-text is an animated loading indicator for agent 'Working…/Thinking…' status, not a decorative heading gradient; pre-existing, unrelated to current edit"
+      }
+    ]
+  }
+}

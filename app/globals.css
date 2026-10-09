@@ -44,6 +44,25 @@ input:focus-visible,
   outline: none;
 }
 
+/* Custom, thin scrollbar for the chat conversation. */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+.chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 999px;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -55,8 +74,19 @@ input:focus-visible,
   }
 }
 
+@keyframes rise-in-place {
+  from {
+    transform: translateY(14px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* Above-the-fold hero content: never dip to opacity 0 on load, slow first
+   paint would leave it unreadable. Slide-up only, text stays legible. */
 .hero-rise {
-  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: rise-in-place 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .tab-panel {

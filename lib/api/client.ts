@@ -26,6 +26,18 @@ function baseUrl(): string {
   return value.replace(/\/$/, "");
 }
 
+// Streaming reads share the API origin and bearer authentication with JSON requests.
+export async function apiStream(path: string, token: string, signal: AbortSignal, lastEventId?: string) {
+  const headers = new Headers({Accept: "text/event-stream", Authorization: `Bearer ${token}`});
+  if (lastEventId) headers.set("Last-Event-ID", lastEventId);
+  const response = await fetch(`${baseUrl()}${path}`, {headers, signal, cache: "no-store"});
+  if (!response.ok) throw new ApiError(response.status, undefined, "Could not connect to session activity.");
+  if (!response.body || !response.headers.get("content-type")?.includes("text/event-stream")) {
+    throw new Error("Invalid session event stream");
+  }
+  return response.body;
+}
+
 const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 // One request. Throws ApiError for an HTTP error response, and a TypeError for a

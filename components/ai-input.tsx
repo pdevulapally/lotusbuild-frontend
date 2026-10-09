@@ -10,7 +10,6 @@ import {
   type ChatComposerInputHandle,
 } from '@astryxdesign/core/Chat';
 import {Token} from '@astryxdesign/core/Token';
-import Image from 'next/image';
 import type {CSSProperties} from 'react';
 
 // Model IDs from the backend's ai.model.allowlist.
@@ -43,7 +42,6 @@ function ModelSelect({
         aria-expanded={isOpen}
         onClick={() => setIsOpen(open => !open)}
         className="flex items-center gap-2 rounded-full border border-line bg-paper py-2 pl-3 pr-3.5 text-[13px] font-medium text-ink transition-colors duration-200 hover:border-ink">
-        <Image src="/Claude_AI_symbol.svg" alt="" width={14} height={14} unoptimized />
         {value}
         <svg
           aria-hidden="true"
@@ -79,7 +77,6 @@ function ModelSelect({
                     selected ? 'bg-line/60 text-ink' : 'text-muted hover:bg-line/40 hover:text-ink'
                   }`}>
                   <span className="flex items-center gap-2.5">
-                    <Image src="/Claude_AI_symbol.svg" alt="" width={14} height={14} unoptimized />
                     {option}
                   </span>
                   {selected && (

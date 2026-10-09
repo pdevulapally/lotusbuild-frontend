@@ -11,6 +11,11 @@ export type Project = {
   createdAt: string;
 };
 
+// One project the signed-in account owns. The backend answers 404 for projects it does not own.
+export function getProject(token: string, projectId: string) {
+  return apiRequest<Project>(`/projects/${encodeURIComponent(projectId)}`, {token});
+}
+
 // Lists the signed-in account's projects. The backend caps a page at 100.
 export async function listProjects(token: string): Promise<Project[]> {
   const {projects} = await apiRequest<{projects: Project[]}>("/projects?limit=100", {token});
