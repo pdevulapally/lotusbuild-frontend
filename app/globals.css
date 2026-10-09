@@ -174,3 +174,12 @@ input:focus-visible,
     transition: none;
   }
 }
+
+.shimmer-text-dark {
+  background: linear-gradient(90deg, rgba(247, 245, 243, 0.45) 0%, #f7f5f3 50%, rgba(247, 245, 243, 0.45) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.6s linear infinite;
+}

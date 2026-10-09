@@ -2,7 +2,8 @@ import Image from "next/image";
 import { AiInput } from "@/components/ai-input";
 import { FeatureList } from "@/components/feature-list";
 import { Reveal } from "@/components/reveal";
-import { SectionIntro } from "@/components/section-intro";
+import { SectionIntro, SectionLabel } from "@/components/section-intro";
+import { HeroBuildPreview } from "@/components/hero-build-preview";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WorkflowDemo } from "@/components/workflow-demo";
@@ -64,25 +65,32 @@ export default function Home() {
       <SiteHeader />
 
       <main id="main" className="flex-1">
-        <section aria-labelledby="hero-title" className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-16 pt-20 text-center sm:px-6 sm:pt-32">
+        <section aria-labelledby="hero-title" className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-8 pt-16 text-center sm:px-6 sm:pt-20">
+          <div className="hero-rise">
+            <SectionLabel>Your idea. A working build.</SectionLabel>
+          </div>
           <h1
             id="hero-title"
-            className="hero-rise mt-8 font-display text-[clamp(2.25rem,5vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.02em] sm:whitespace-nowrap [animation-delay:120ms]"
+            className="hero-rise mt-6 max-w-4xl text-balance font-display text-[clamp(2.75rem,6.5vw,5.5rem)] font-bold leading-[1.02] tracking-[-0.035em] [animation-delay:120ms]"
           >
-            Hey, what would you like to build today?
+            You bring the idea.<br />Watch it take shape.
           </h1>
-          <div className="hero-rise mt-12 w-full max-w-2xl [animation-delay:360ms]">
+          <p className="hero-rise mt-6 max-w-xl text-balance text-base leading-7 text-muted sm:text-lg [animation-delay:240ms]">
+            Describe what you want to build. Follow your AI agent as it plans,
+            writes code, and brings your project to life in a sandbox.
+          </p>
+          <div className="hero-rise mt-8 w-full max-w-2xl [animation-delay:360ms]">
             <AiInput
               label="Describe a project to build"
-              attachments={[
-                "project_brief.pdf",
-                "wireframes_v2.fig",
-                "api_spec.yaml",
-                "user_research.csv",
-                "brand_guidelines.pdf",
+              placeholder="What would you like to build?"
+              examples={[
+                {label: "A coffee shop website", prompt: "Build a warm, editorial website for a coffee shop with a menu, opening hours, and location."},
+                {label: "A personal portfolio", prompt: "Build a personal portfolio with selected projects, an about section, and a contact page."},
+                {label: "A project dashboard", prompt: "Build a project dashboard with tasks, progress tracking, and upcoming deadlines."},
               ]}
             />
           </div>
+          <HeroBuildPreview />
         </section>
 
         <section id="workflow" aria-labelledby="workflow-title" className={sectionClass}>
