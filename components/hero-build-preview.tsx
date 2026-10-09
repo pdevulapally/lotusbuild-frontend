@@ -19,7 +19,7 @@ export function HeroBuildPreview() {
 
   return (
     <figure ref={ref} className="hero-rise relative mt-14 w-full max-w-5xl text-left [animation-delay:480ms]">
-      <div aria-hidden="true" className="pointer-events-none absolute -inset-x-10 -top-16 h-72 bg-[radial-gradient(60%_100%_at_50%_0%,rgba(180,83,42,0.22),transparent_70%)] blur-2xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 -top-16 h-72 sm:-inset-x-10 bg-[radial-gradient(60%_100%_at_50%_0%,rgba(180,83,42,0.22),transparent_70%)] blur-2xl" />
       <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-ink-strong text-paper shadow-[0_48px_96px_-40px_rgba(26,26,26,0.7)] ring-1 ring-black/40">
         <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-2.5 text-[12px] text-paper/60">
           <div className="flex items-center gap-3">
