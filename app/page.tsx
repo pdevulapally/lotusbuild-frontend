@@ -7,6 +7,7 @@ import { HeroBuildPreview } from "@/components/hero-build-preview";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WorkflowDemo } from "@/components/workflow-demo";
+import sunriseWorkspace from "@/public/hero/sunrise-workspace.jpg";
 
 const capabilities = [
   {
@@ -62,34 +63,65 @@ export default function Home() {
       >
         Skip to content
       </a>
-      <SiteHeader />
+      <SiteHeader overlayTargetId="hero" />
 
       <main id="main" className="flex-1">
-        <section aria-labelledby="hero-title" className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-8 pt-16 text-center sm:px-6 sm:pt-20">
-          <div className="hero-rise">
-            <SectionLabel>Your idea. A working build.</SectionLabel>
+        <section id="hero" aria-labelledby="hero-title" className="relative isolate overflow-hidden text-paper">
+          <Image
+            src={sunriseWorkspace}
+            alt=""
+            fill
+            priority
+            placeholder="blur"
+            sizes="100vw"
+            className="-z-20 object-cover object-[68%_center] lg:object-center"
+          />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[rgba(30,17,10,0.5)] lg:bg-[linear-gradient(90deg,rgba(30,17,10,0.74)_0%,rgba(30,17,10,0.5)_46%,rgba(30,17,10,0.1)_72%,transparent_100%)]" />
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-40 bg-[linear-gradient(180deg,rgba(30,17,10,0.45),transparent)]" />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-56 bg-[linear-gradient(180deg,transparent,var(--color-paper))]" />
+
+          <div className="mx-auto flex min-h-[min(92svh,960px)] w-full max-w-6xl flex-col justify-center px-4 pb-40 pt-36 sm:px-6 sm:pt-40">
+            <p className="hero-rise text-[13px] uppercase tracking-[0.18em] text-[#f6d7a8]">
+              AI development workspace
+            </p>
+            <h1
+              id="hero-title"
+              className="hero-rise mt-5 max-w-3xl text-balance font-display text-[clamp(2.75rem,6.5vw,5.75rem)] font-bold leading-[1.0] tracking-[-0.035em] text-paper [animation-delay:120ms]">
+              A calmer way to<br />build software.
+            </h1>
+            <p className="hero-rise mt-6 max-w-xl text-balance text-base leading-7 text-paper/80 sm:text-lg [animation-delay:240ms]">
+              Describe what you want. An agent plans it, writes the code and runs it in
+              its own sandbox while you follow along — from wherever the morning finds you.
+            </p>
+            <div className="hero-rise mt-9 w-full max-w-2xl [animation-delay:360ms]">
+              <AiInput
+                label="Describe a project to build"
+                placeholder="What would you like to build?"
+                tone="dark"
+                align="start"
+                examples={[
+                  {label: "A coffee shop website", prompt: "Build a warm, editorial website for a coffee shop with a menu, opening hours, and location."},
+                  {label: "A personal portfolio", prompt: "Build a personal portfolio with selected projects, an about section, and a contact page."},
+                  {label: "A project dashboard", prompt: "Build a project dashboard with tasks, progress tracking, and upcoming deadlines."},
+                ]}
+              />
+            </div>
+            <dl className="hero-rise mt-12 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-4 text-[13px] leading-5 sm:grid-cols-3 [animation-delay:480ms]">
+              {[
+                ["Own sandbox", "Every project runs in isolation."],
+                ["Live activity", "Code, commands and a read-only desktop."],
+                ["Your call", "Queue follow-ups, steer, or cancel."],
+              ].map(([term, detail]) => (
+                <div key={term} className="border-t border-white/25 pt-3">
+                  <dt className="font-medium text-paper">{term}</dt>
+                  <dd className="text-paper/70">{detail}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
-          <h1
-            id="hero-title"
-            className="hero-rise mt-6 max-w-4xl text-balance font-display text-[clamp(2.75rem,6.5vw,5.5rem)] font-bold leading-[1.02] tracking-[-0.035em] [animation-delay:120ms]"
-          >
-            You bring the idea.<br />Watch it take shape.
-          </h1>
-          <p className="hero-rise mt-6 max-w-xl text-balance text-base leading-7 text-muted sm:text-lg [animation-delay:240ms]">
-            Describe what you want to build. Follow your AI agent as it plans,
-            writes code, and brings your project to life in a sandbox.
-          </p>
-          <div className="hero-rise mt-8 w-full max-w-2xl [animation-delay:360ms]">
-            <AiInput
-              label="Describe a project to build"
-              placeholder="What would you like to build?"
-              examples={[
-                {label: "A coffee shop website", prompt: "Build a warm, editorial website for a coffee shop with a menu, opening hours, and location."},
-                {label: "A personal portfolio", prompt: "Build a personal portfolio with selected projects, an about section, and a contact page."},
-                {label: "A project dashboard", prompt: "Build a project dashboard with tasks, progress tracking, and upcoming deadlines."},
-              ]}
-            />
-          </div>
+        </section>
+
+        <section aria-label="Example session" className="relative z-[1] mx-auto -mt-28 flex max-w-6xl flex-col items-center px-4 pb-8 sm:px-6">
           <HeroBuildPreview />
         </section>
 
