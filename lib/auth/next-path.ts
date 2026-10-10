@@ -19,6 +19,11 @@ export function verifyEmailPath(next?: string): string {
   return next && next !== DEFAULT_HOME ? `/verify-email?next=${encodeURIComponent(next)}` : "/verify-email";
 }
 
+// Where to return after re-authenticating. From an auth page (e.g. signing out on
+// /verify-email?next=/projects/abc) the page's own `next` is used, never the auth page.
 export function currentPath(): string {
-  return typeof window === "undefined" ? DEFAULT_HOME : window.location.pathname + window.location.search;
+  if (typeof window === "undefined") return DEFAULT_HOME;
+  const {pathname, search} = window.location;
+  if (AUTH_PAGES.includes(pathname)) return safeNextPath(new URLSearchParams(search).get("next"));
+  return pathname + search;
 }

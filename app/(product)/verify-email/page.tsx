@@ -17,7 +17,7 @@ const POLL_MS = 5_000;
 function VerifyEmail({user, me}: {user: User; me: Me}) {
   const router = useRouter();
   const next = safeNextPath(useSearchParams().get("next"));
-  const {refreshAccount, signOutUser} = useAuth();
+  const {refreshAccount, signOutUser, endSessionIfInvalid} = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -35,9 +35,12 @@ function VerifyEmail({user, me}: {user: User; me: Me}) {
   useEffect(() => {
     let cancelled = false;
     const timer = setInterval(() => {
-      void user.reload().then(() => {
-        if (!cancelled && user.emailVerified) void proceed();
-      });
+      void user
+        .reload()
+        .then(() => {
+          if (!cancelled && user.emailVerified) void proceed();
+        })
+        .catch(failure => void endSessionIfInvalid(failure));
     }, POLL_MS);
     return () => {
       cancelled = true;
@@ -53,6 +56,7 @@ function VerifyEmail({user, me}: {user: User; me: Me}) {
     try {
       if (!(await proceed())) setNotice("Not verified yet. Open the link in the email we sent, then try again.");
     } catch (failure) {
+      if (await endSessionIfInvalid(failure)) return;
       setError(authErrorMessage(failure));
     } finally {
       setIsBusy(false);
@@ -67,6 +71,7 @@ function VerifyEmail({user, me}: {user: User; me: Me}) {
       await sendEmailVerification(user);
       setNotice(`A new verification link is on its way to ${user.email}.`);
     } catch (failure) {
+      if (await endSessionIfInvalid(failure)) return;
       setError(authErrorMessage(failure));
     } finally {
       setIsBusy(false);

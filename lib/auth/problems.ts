@@ -21,7 +21,25 @@ const BLOCKED: Record<string, string> = {
   "account/billing-unavailable": "This account cannot be used with LotusBuild.",
 };
 
+// Firebase SDK codes raised by getIdToken()/reload() when the locally persisted
+// session can no longer be used. Only meaningful for an already signed-in user.
+const FIREBASE_SESSION_ENDED = new Set([
+  "auth/invalid-user-token",
+  "auth/user-token-expired",
+  "auth/user-not-found",
+  "auth/null-user",
+  "auth/invalid-credential",
+  "auth/user-disabled",
+]);
+
 export function classifyAuthError(error: unknown): AuthProblem {
+  const firebaseCode = !(error instanceof ApiError) ? (error as {code?: unknown} | null)?.code : undefined;
+  if (typeof firebaseCode === "string" && FIREBASE_SESSION_ENDED.has(firebaseCode)) {
+    return {
+      kind: "signed-out",
+      message: SIGNED_OUT[firebaseCode] ?? "Your session is no longer valid. Sign in again.",
+    };
+  }
   if (error instanceof ApiError) {
     if (error.status === 401) {
       return {kind: "signed-out", message: SIGNED_OUT[error.code ?? ""] ?? "Your session is no longer valid. Sign in again."};

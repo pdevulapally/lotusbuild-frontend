@@ -22,6 +22,8 @@ type AuthContextValue = {
   /** Re-reads the Firebase user and the account record, e.g. after the email was verified. */
   refreshAccount(): Promise<Me | null>;
   signOutUser(notice?: string): Promise<void>;
+  /** Signs out when the error means the session is over (backend 401 or a dead Firebase token). Returns whether it did. */
+  endSessionIfInvalid(error: unknown): Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -45,6 +47,16 @@ export function AuthProvider({children}: {children: ReactNode}) {
     await signOut(firebaseAuth());
   }, []);
 
+  const endSessionIfInvalid = useCallback(
+    async (error: unknown) => {
+      const problem = classifyAuthError(error);
+      if (problem.kind !== "signed-out") return false;
+      await signOutUser(problem.message);
+      return true;
+    },
+    [signOutUser],
+  );
+
   const withToken = useCallback(
     async <T,>(call: (token: string) => Promise<T>): Promise<T> => {
       const user = firebaseAuth().currentUser;
@@ -52,15 +64,15 @@ export function AuthProvider({children}: {children: ReactNode}) {
       try {
         return await call(await user.getIdToken());
       } catch (error) {
-        if (!(error instanceof ApiError)) throw error;
+        if (!(error instanceof ApiError)) {
+          await endSessionIfInvalid(error);
+          throw error;
+        }
         if (error.status === 401) {
           try {
             return await call(await user.getIdToken(true));
           } catch (retryError) {
-            if (retryError instanceof ApiError && retryError.status === 401) {
-              const problem = classifyAuthError(retryError);
-              await signOutUser(problem.kind === "signed-out" ? problem.message : undefined);
-            }
+            await endSessionIfInvalid(retryError);
             throw retryError;
           }
         }
@@ -72,7 +84,7 @@ export function AuthProvider({children}: {children: ReactNode}) {
         throw error;
       }
     },
-    [signOutUser],
+    [endSessionIfInvalid, signOutUser],
   );
 
   const loadAccount = useCallback(
@@ -86,13 +98,14 @@ export function AuthProvider({children}: {children: ReactNode}) {
         );
         return me;
       } catch (error) {
-        const problem = classifyAuthError(error);
-        if (problem.kind === "signed-out") await signOutUser(problem.message);
-        else setState(current => (current.status === "signed-in" ? {...current, problem} : current));
+        if (!(await endSessionIfInvalid(error))) {
+          const problem = classifyAuthError(error);
+          setState(current => (current.status === "signed-in" ? {...current, problem} : current));
+        }
         return null;
       }
     },
-    [signOutUser, withToken],
+    [endSessionIfInvalid, withToken],
   );
 
   useEffect(
@@ -114,14 +127,19 @@ export function AuthProvider({children}: {children: ReactNode}) {
   const refreshAccount = useCallback(async () => {
     const user = firebaseAuth().currentUser;
     if (!user) return null;
-    await user.reload();
-    await user.getIdToken(true);
+    try {
+      await user.reload();
+      await user.getIdToken(true);
+    } catch (error) {
+      if (await endSessionIfInvalid(error)) return null;
+      throw error;
+    }
     return loadAccount(user);
-  }, [loadAccount]);
+  }, [endSessionIfInvalid, loadAccount]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({state, withToken, refreshAccount, signOutUser}),
-    [state, withToken, refreshAccount, signOutUser],
+    () => ({state, withToken, refreshAccount, signOutUser, endSessionIfInvalid}),
+    [state, withToken, refreshAccount, signOutUser, endSessionIfInvalid],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
