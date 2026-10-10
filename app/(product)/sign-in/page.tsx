@@ -59,7 +59,10 @@ function SignInForm() {
   }
 
   return (
-    <AuthShell title="Welcome back to LotusBuild">
+    <AuthShell
+      eyebrow="Sign in"
+      title="Welcome back"
+      description={next !== DEFAULT_HOME ? "Sign in to continue to where you were heading." : "Sign in to open your workspace and continue your builds."}>
       <AuthError message={error ?? state.notice} />
       <form onSubmit={handleEmailSignIn} className="flex flex-col gap-3">
         <input name="email" type="email" autoComplete="email" placeholder="Email" required className={authInputClass} />

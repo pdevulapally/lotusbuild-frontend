@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type {ReactNode} from "react";
 
+import {ActivityIcon} from "@/lib/demo-session";
+
 // Inputs and buttons share one height and shape so the form reads as one system.
 export const authInputClass =
   "h-14 w-full border-b-2 border-ink bg-transparent px-1 text-[17px] text-ink outline-none transition-colors duration-200 placeholder:text-muted focus:border-accent";
@@ -76,30 +78,126 @@ function Logo({className}: {className?: string}) {
   );
 }
 
-// Split layout matching the homepage: brand panel on the left, form on the right.
-export function AuthShell({title, children}: {title: string; children: ReactNode}) {
+const brandPoints = [
+  {title: "Describe, then watch", body: "Say what you want built. The agent plans, writes code and reports as it goes."},
+  {title: "Real sandbox, real app", body: "Every session runs in its own cloud sandbox with a read-only desktop view."},
+  {title: "Pick up where you left off", body: "Projects and sessions are saved to your account, with the full activity trail."},
+];
+
+const brandActivity: {label: string; status: "completed" | "running"}[] = [
+  {label: "read_file", status: "completed"},
+  {label: "write_file", status: "completed"},
+  {label: "bash", status: "running"},
+];
+
+// A compact, static picture of a session so the panel shows the product, not a stock image.
+function BrandSessionCard() {
   return (
-    <main className="grid min-h-screen md:grid-cols-2">
-      <aside className="hidden p-8 md:block">
-        <div className="relative h-full min-h-[calc(100vh-4rem)] overflow-hidden rounded-[32px] border border-line">
-          <Image
-            src="/Images/marketing-image.png"
-            alt="You describe an idea. LotusBuild turns it into a real app."
-            fill
-            sizes="50vw"
-            priority
-            className="object-cover object-top"
+    <div aria-hidden="true" className="relative mt-auto overflow-hidden rounded-[18px] border border-white/10 bg-white/[0.04] p-4 text-[12.5px] backdrop-blur">
+      <div className="flex items-center justify-between text-paper/60">
+        <span className="flex items-center gap-2.5">
+          <span className="flex gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-white/15" />
+            <span className="h-2 w-2 rounded-full bg-white/15" />
+            <span className="h-2 w-2 rounded-full bg-white/15" />
+          </span>
+          <span className="font-medium text-paper/85">Ridge Coffee</span>
+          <span className="hidden lg:inline">/ Storefront</span>
+        </span>
+        <span className="flex items-center gap-2 rounded-full bg-[#f0b58b]/15 px-2.5 py-1 text-[#f0b58b]">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f0b58b]" />
+          Running
+        </span>
+      </div>
+      <p className="mt-4 ml-auto w-fit max-w-[88%] rounded-2xl rounded-br-md bg-white/10 px-3.5 py-2.5 leading-5 text-paper">
+        Add an online menu with prices and a “reserve a table” form.
+      </p>
+      <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3.5">
+        <div className="flex items-center justify-between">
+          <span className="shimmer-text-dark">Updating the storefront…</span>
+          <span className="text-paper/45">3 events</span>
+        </div>
+        <ol className="mt-3 flex flex-col gap-2">
+          {brandActivity.map(item => (
+            <li key={item.label} className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2.5 text-paper/85">
+                <ActivityIcon status={item.status} dark />
+                <span className="font-mono">{item.label}</span>
+              </span>
+              <span className="text-paper/45">{item.status === "running" ? "Running" : "Completed"}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+type AuthShellProps = {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  children: ReactNode;
+};
+
+// Split layout: a dark brand panel that shows the product on the left, the form on the right.
+export function AuthShell({eyebrow, title, description, children}: AuthShellProps) {
+  return (
+    <main className="grid min-h-screen md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <aside className="hidden p-6 md:block lg:p-8">
+        <div className="relative flex h-full min-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[32px] bg-ink-strong p-8 text-paper shadow-[0_48px_96px_-48px_rgba(26,26,26,0.8)] lg:min-h-[calc(100vh-4rem)] lg:p-10">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[120%] -translate-x-1/2 bg-[radial-gradient(50%_60%_at_50%_0%,rgba(180,83,42,0.35),transparent_70%)] blur-2xl"
           />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:48px_48px]"
+          />
+          <div className="relative flex h-full flex-col gap-10">
+            <Link href="/" aria-label="LotusBuild home" className="w-fit font-display text-[22px] font-bold tracking-tight text-paper">
+              LotusBuild
+            </Link>
+            <div className="flex flex-col gap-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f0b58b]">Your idea. A working build.</p>
+              <h2 className="max-w-md font-display text-[34px] font-bold leading-[1.1] tracking-[-0.02em] text-paper lg:text-[40px]">
+                Sign in and keep building where you stopped.
+              </h2>
+              <ul className="mt-2 flex flex-col divide-y divide-white/10">
+                {brandPoints.map(point => (
+                  <li key={point.title} className="flex flex-col gap-1 py-4 first:pt-0">
+                    <span className="text-[14px] font-semibold text-paper">{point.title}</span>
+                    <span className="max-w-sm text-[13.5px] leading-6 text-paper/60">{point.body}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <BrandSessionCard />
+          </div>
         </div>
       </aside>
-      <section className="flex items-center justify-center px-6 py-16">
-        <div className="flex w-full max-w-sm flex-col gap-6">
+      <section className="flex flex-col px-6 py-10 sm:px-10 md:py-12">
+        <div className="flex items-center justify-between">
           <Link href="/" aria-label="LotusBuild home" className="flex w-fit items-center md:hidden">
             <Logo />
           </Link>
-          <h1 className="whitespace-nowrap font-display text-2xl font-bold leading-tight tracking-[-0.02em] sm:text-3xl">{title}</h1>
-          {children}
+          <Link href="/" className="ml-auto text-[13px] text-muted transition-colors hover:text-ink">
+            ← Back to lotusbuild
+          </Link>
         </div>
+        <div className="flex flex-1 items-center justify-center py-12">
+          <div className="flex w-full max-w-sm flex-col gap-6">
+            <div className="flex flex-col gap-3">
+              {eyebrow && <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">{eyebrow}</p>}
+              <h1 className="font-display text-[30px] font-bold leading-tight tracking-[-0.02em] sm:text-[34px]">{title}</h1>
+              {description && <p className="text-[15px] leading-7 text-muted">{description}</p>}
+            </div>
+            {children}
+          </div>
+        </div>
+        <p className="text-center text-[12.5px] leading-6 text-muted md:text-left">
+          Protected by Firebase Authentication. Your session is checked on every request to LotusBuild.
+        </p>
       </section>
     </main>
   );
