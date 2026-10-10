@@ -34,9 +34,9 @@ export function WorkflowDemo() {
   const running = state.status === "RUNNING";
 
   return (
-    <div ref={ref} className="mt-16 grid w-full overflow-hidden rounded-[24px] border border-line bg-paper text-left shadow-[0_40px_80px_-40px_rgba(38,38,38,0.35)] md:grid-cols-[15rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1.15fr)_minmax(0,1fr)]">
+    <div ref={ref} className="mt-16 grid w-full overflow-hidden rounded-[24px] lg:h-[600px] border border-line bg-paper text-left shadow-[0_40px_80px_-40px_rgba(38,38,38,0.35)] md:grid-cols-[15rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1.15fr)_minmax(0,1fr)]">
       {/* Sidebar, as in the workspace */}
-      <aside className="hidden flex-col gap-7 border-r border-line p-5 md:flex">
+      <aside className="hidden min-h-0 flex-col gap-7 overflow-hidden border-r border-line p-5 md:flex">
         <div className="flex items-center justify-between">
           <span className="font-sans text-[15px] font-bold tracking-[-0.02em]">LotusBuild</span>
           <span className="flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-[11px] text-muted">
@@ -69,7 +69,7 @@ export function WorkflowDemo() {
       </aside>
 
       {/* Project chat */}
-      <section className="flex h-[600px] min-w-0 flex-col border-b border-line lg:border-b-0 lg:border-r">
+      <section className="flex h-[600px] min-h-0 min-w-0 flex-col border-b border-line lg:h-full lg:border-b-0 lg:border-r">
         <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line px-5">
           <h3 className="truncate font-sans text-[17px] font-bold tracking-[-0.02em]">Ridge Coffee storefront</h3>
           <span className="flex shrink-0 items-center gap-2 rounded-full bg-line/50 px-3 py-1 text-[12px] text-ink">
@@ -118,7 +118,7 @@ export function WorkflowDemo() {
       </section>
 
       {/* Desktop / context */}
-      <aside className="flex min-h-[420px] flex-col bg-line/30 md:col-span-2 lg:col-span-1">
+      <aside className="flex h-[520px] min-h-0 flex-col overflow-hidden bg-line/30 md:col-span-2 lg:col-span-1 lg:h-full">
         <div className="flex h-14 items-center gap-1 border-b border-line px-5 text-[13px]" role="tablist">
           {(["desktop", "context"] as const).map(name => (
             <button key={name} type="button" role="tab" aria-selected={tab === name} onClick={() => setTab(name)}
@@ -127,9 +127,9 @@ export function WorkflowDemo() {
             </button>
           ))}
         </div>
-        <div className="flex flex-1 flex-col p-5">
+        <div className="flex min-h-0 flex-1 flex-col p-5">
           {tab === "desktop" ? (
-            <div className="flex flex-1 flex-col gap-4 rounded-3xl bg-paper p-5">
+            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-3xl bg-paper p-5">
               <div className="flex items-center justify-between">
                 <p className="text-[13px] text-muted">Desktop</p>
                 <span className="text-[12px] text-muted">{state.sandbox ? "Read-only view" : ""}</span>
@@ -165,7 +165,7 @@ const beans = [
 function StorefrontPreview({stage, compiling}: {stage: number; compiling: boolean}) {
   const dark = stage >= 3;
   return (
-    <div className="relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-[#fbf7f2] text-[#2a2420]">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-[#fbf7f2] text-[#2a2420]">
       <div className="flex items-center gap-2 border-b border-[#eee6dd] px-3 py-2">
         <span aria-hidden="true" className="flex gap-1"><span className="h-2 w-2 rounded-full bg-[#e2d9cf]" /><span className="h-2 w-2 rounded-full bg-[#e2d9cf]" /><span className="h-2 w-2 rounded-full bg-[#e2d9cf]" /></span>
         <span className="ml-1 flex-1 truncate rounded-full bg-[#f1ebe4] px-3 py-0.5 text-center font-mono text-[10px] text-[#8a7f76]">{stage >= 0 ? "sandbox · :3000" : "—"}</span>

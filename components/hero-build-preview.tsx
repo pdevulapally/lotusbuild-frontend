@@ -16,68 +16,92 @@ const events: DemoEvent[] = [
 export function HeroBuildPreview() {
   const {ref, state} = useDemoTimeline<HTMLElement>(events);
   const running = state.status === "RUNNING";
+  const messages = state.messages.slice(-2);
+  const activity = state.activity.slice(-4);
 
   return (
-    <figure ref={ref} className="hero-rise relative mt-14 w-full max-w-5xl text-left [animation-delay:480ms]">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 -top-16 h-72 sm:-inset-x-10 bg-[radial-gradient(60%_100%_at_50%_0%,rgba(180,83,42,0.22),transparent_70%)] blur-2xl" />
-      <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-ink-strong text-paper shadow-[0_48px_96px_-40px_rgba(26,26,26,0.7)] ring-1 ring-black/40">
-        <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-2.5 text-[12px] text-paper/60">
-          <div className="flex items-center gap-3">
-            <span aria-hidden="true" className="flex gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-              <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-              <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-            </span>
-            <span className="font-medium text-paper/80">Bloom Physio</span>
-            <span className="hidden sm:inline">/ Booking page</span>
-          </div>
-          <span className={`flex items-center gap-2 rounded-full px-2.5 py-1 ${running ? "bg-[#f0b58b]/15 text-[#f0b58b]" : "bg-white/10 text-paper/80"}`}>
+    <figure ref={ref} className="hero-rise relative w-full max-w-5xl text-left [animation-delay:480ms]">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#141110] text-paper shadow-[0_48px_96px_-40px_rgba(26,26,26,0.8)] ring-1 ring-black/50">
+        {/* Window bar */}
+        <div className="flex h-11 items-center gap-3 border-b border-white/[0.08] bg-[#1a1614] px-4 text-[12px]">
+          <span aria-hidden="true" className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/80" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/80" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]/80" />
+          </span>
+          <span className="mx-auto hidden min-w-0 max-w-[60%] truncate rounded-md bg-white/[0.06] px-3 py-1 font-mono text-[11px] text-paper/55 sm:block">
+            lotusbuild.co.uk/projects/bloom-physio/sessions/booking-page
+          </span>
+          <span className={`ml-auto flex shrink-0 items-center gap-2 rounded-full px-2.5 py-1 sm:ml-0 ${running ? "bg-[#f0b58b]/15 text-[#f0b58b]" : "bg-white/10 text-paper/80"}`}>
             <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${running ? "animate-pulse bg-[#f0b58b]" : state.status === "IDLE" ? "bg-[#9fd8a8]" : "bg-paper/40"}`} />
             {STATUS_LABEL[state.status]}
           </span>
         </div>
 
-        <div className="grid sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div className="flex min-h-[320px] flex-col gap-5 border-b border-white/10 p-5 sm:border-b-0 sm:border-r">
-            <div className="flex flex-col gap-3">
-              {state.messages.map((message, index) => (
+        <div className="grid grid-rows-[300px_340px] sm:h-[470px] sm:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] sm:grid-rows-none">
+          {/* Session: messages, activity, follow-up composer */}
+          <div className="flex min-h-0 flex-col border-b border-white/[0.08] sm:border-b-0 sm:border-r">
+            <div className="flex h-10 shrink-0 items-center justify-between px-4 text-[11px] uppercase tracking-[0.12em] text-paper/40">
+              <span>Bloom Physio · Booking page</span>
+              <span>{state.runs > 0 ? `Run ${state.runs}` : "No runs yet"}</span>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-hidden px-4 pb-3">
+              {messages.map((message, index) => (
                 <p
-                  key={index}
-                  className={`tab-panel max-w-[92%] text-[13px] leading-5 ${
-                    message.role === "user" ? "self-end rounded-2xl rounded-br-md bg-white/10 px-3.5 py-2.5 text-paper" : "text-paper/75"
+                  key={`${message.text}-${index}`}
+                  className={`tab-panel text-[13px] leading-5 ${
+                    message.role === "user"
+                      ? "max-w-[88%] self-end rounded-2xl rounded-br-md bg-white/10 px-3.5 py-2.5 text-paper"
+                      : "max-w-[94%] text-paper/75"
                   }`}>
                   {message.text}
                 </p>
               ))}
-            </div>
-            <div className="mt-auto rounded-xl border border-white/10 bg-white/[0.04] p-3.5">
-              <div className="flex items-center justify-between text-[12px]">
-                <span className={running && state.phase !== "finished" ? "shimmer-text-dark" : "text-paper/80"}>{phaseLabel(state)}</span>
-                <span className="text-paper/45">{state.activity.length > 0 ? `${state.activity.length} events` : "Waiting for the agent"}</span>
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className={running && state.phase !== "finished" ? "shimmer-text-dark" : "text-paper/80"}>{phaseLabel(state)}</span>
+                  <span className="text-paper/45">{state.activity.length > 0 ? `${state.activity.length} events` : "Waiting for the agent"}</span>
+                </div>
+                <ol className="mt-2.5 flex h-[88px] flex-col justify-end gap-1.5 overflow-hidden">
+                  {activity.map((item, index) => (
+                    <li key={`${item.label}-${index}`} className="tab-panel flex items-center justify-between gap-3 text-[12.5px]">
+                      <span className="flex items-center gap-2.5 text-paper/85">
+                        <ActivityIcon status={item.status} dark />
+                        <span className="font-mono">{item.label}</span>
+                      </span>
+                      <span className="text-paper/45">{item.status === "running" ? "Running" : "Completed"}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
-              <ol className="mt-3 flex flex-col gap-2">
-                {state.activity.map((item, index) => (
-                  <li key={index} className="tab-panel flex items-center justify-between gap-3 text-[12.5px]">
-                    <span className="flex items-center gap-2.5 text-paper/85">
-                      <ActivityIcon status={item.status} dark />
-                      <span className="font-mono">{item.label}</span>
-                    </span>
-                    <span className="text-paper/45">{item.status === "running" ? "Running" : "Completed"}</span>
-                  </li>
-                ))}
-              </ol>
+            </div>
+            <div className="flex shrink-0 items-center gap-3 border-t border-white/[0.08] px-4 py-3">
+              <span className="flex-1 truncate text-[12.5px] text-paper/35">{running ? "Queue a follow-up for when the agent finishes…" : "Send a follow-up…"}</span>
+              <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-paper/40">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2.5 5.5 6 2l3.5 3.5" /></svg>
+              </span>
             </div>
           </div>
 
-          <div className="flex flex-col bg-[#15110f] p-3 sm:p-4">
-            <div className="flex items-center justify-between px-1 pb-3 text-[11px] text-paper/45">
-              <span className="flex items-center gap-2">
-                <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${state.sandbox ? "bg-[#9fd8a8]" : "bg-paper/30"}`} />
-                Desktop · read-only
+          {/* Desktop pane: read-only view of the sandbox */}
+          <div className="flex min-h-0 flex-col bg-[#0f0d0c] p-3">
+            <div className="flex h-8 shrink-0 items-center justify-between px-1 pb-2 text-[11px]">
+              <span className="flex gap-1" role="tablist" aria-label="Session panels">
+                <span role="tab" aria-selected="true" className="rounded-full bg-white/10 px-2.5 py-1 text-paper">Desktop</span>
+                <span role="tab" aria-selected="false" className="px-2.5 py-1 text-paper/45">Context</span>
               </span>
-              <span className="font-mono">{state.sandbox ? "sandbox · :3000" : "sandbox · not started"}</span>
+              <span className="flex items-center gap-2 text-paper/45">
+                <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${state.sandbox ? "bg-[#9fd8a8]" : "bg-paper/30"}`} />
+                {state.sandbox ? "Read-only" : "Sandbox not started"}
+              </span>
             </div>
-            <BookingPreview stage={state.sandbox ? state.stage : -1} ready={state.status === "IDLE"} />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#fbf7f2]">
+              <div className="flex h-8 shrink-0 items-center gap-2 border-b border-[#eee6dd] bg-[#f3eee8] px-3">
+                <span aria-hidden="true" className="flex gap-1"><span className="h-2 w-2 rounded-full bg-[#dcd3c9]" /><span className="h-2 w-2 rounded-full bg-[#dcd3c9]" /><span className="h-2 w-2 rounded-full bg-[#dcd3c9]" /></span>
+                <span className="ml-1 flex-1 truncate rounded-md bg-white px-3 py-0.5 text-center font-mono text-[10px] text-[#8a7f76]">{state.sandbox ? "sandbox · localhost:3000" : "—"}</span>
+              </div>
+              <BookingPreview stage={state.sandbox ? state.stage : -1} ready={state.status === "IDLE"} />
+            </div>
           </div>
         </div>
       </div>
@@ -91,7 +115,7 @@ const slots = ["09:00", "09:45", "10:30", "11:15", "13:00", "13:45", "14:30", "1
 
 function BookingPreview({stage, ready}: {stage: number; ready: boolean}) {
   return (
-    <div className="relative flex min-h-[260px] flex-1 flex-col overflow-hidden rounded-xl bg-[#fbf7f2] text-[#2a2420] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fbf7f2] text-[#2a2420]">
       {stage < 1 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-[12px] text-[#8a7f76]">
           <span aria-hidden="true" className={`h-8 w-8 rounded-full border-2 border-[#d6cfc7] ${stage === 0 ? "animate-spin border-t-[#b4532a]" : ""}`} />
