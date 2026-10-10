@@ -16,6 +16,7 @@ import {
 import {useAuth} from "@/lib/auth/auth-provider";
 import {homePath} from "@/lib/auth/home";
 import {DEFAULT_HOME, safeNextPath, verifyEmailPath} from "@/lib/auth/next-path";
+import {REQUIRE_EMAIL_VERIFICATION} from "@/lib/auth/verification";
 import {authErrorMessage, signInWithEmail, signInWithGoogle} from "@/lib/firebase/auth-actions";
 
 function SignInForm() {
@@ -28,7 +29,7 @@ function SignInForm() {
   // A signed-in visitor never sees the form: they go where they were heading.
   useEffect(() => {
     if (state.status !== "signed-in") return;
-    if (!state.user.emailVerified) {
+    if (REQUIRE_EMAIL_VERIFICATION && !state.user.emailVerified) {
       router.replace(verifyEmailPath(next));
       return;
     }

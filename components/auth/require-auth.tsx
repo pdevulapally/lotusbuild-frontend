@@ -8,6 +8,7 @@ import {authSecondaryButtonClass} from "@/components/auth/auth-shell";
 import type {Me} from "@/lib/api/me";
 import {useAuth} from "@/lib/auth/auth-provider";
 import {currentPath, signInPath, verifyEmailPath} from "@/lib/auth/next-path";
+import {REQUIRE_EMAIL_VERIFICATION} from "@/lib/auth/verification";
 
 export function AuthLoading({label = "Loading…"}: {label?: string}) {
   return (
@@ -31,7 +32,10 @@ export function RequireAuth({verified = true, children}: RequireAuthProps) {
 
   const needsSignIn = state.status === "signed-out";
   const needsVerification =
-    state.status === "signed-in" && (verified && (!state.user.emailVerified || state.problem?.kind === "verify-email"));
+    REQUIRE_EMAIL_VERIFICATION &&
+    state.status === "signed-in" &&
+    verified &&
+    (!state.user.emailVerified || state.problem?.kind === "verify-email");
 
   useEffect(() => {
     if (needsSignIn) router.replace(signInPath(currentPath()));

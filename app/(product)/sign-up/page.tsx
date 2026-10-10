@@ -16,6 +16,7 @@ import {
 import {useAuth} from "@/lib/auth/auth-provider";
 import {homePath} from "@/lib/auth/home";
 import {DEFAULT_HOME, safeNextPath, verifyEmailPath} from "@/lib/auth/next-path";
+import {REQUIRE_EMAIL_VERIFICATION} from "@/lib/auth/verification";
 import {authErrorMessage, signInWithGoogle, signUpWithEmail} from "@/lib/firebase/auth-actions";
 
 const PASSWORD_MISMATCH = "The passwords do not match.";
@@ -27,10 +28,10 @@ function SignUpForm() {
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
-  // Email sign-up leaves the user signed in but unverified, so this lands on /verify-email.
+  // Email sign-up leaves the user signed in but unverified; the gate only applies when enabled.
   useEffect(() => {
     if (state.status !== "signed-in") return;
-    if (!state.user.emailVerified) {
+    if (REQUIRE_EMAIL_VERIFICATION && !state.user.emailVerified) {
       router.replace(verifyEmailPath(next));
       return;
     }
