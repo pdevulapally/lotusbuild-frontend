@@ -1,17 +1,12 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import {auth} from "@/lib/firebase/client";
 import {AiInput} from "@/components/ai-input";
+import {useAuth} from "@/lib/auth/auth-provider";
 import {SessionActivity} from "./session-activity";
+import {ApiError} from "@/lib/api/client";
 import {type Project} from "@/lib/api/projects";
 import {getDesktopStatus, listMessages, listSessions, sendFollowUp, type Message, type Session} from "@/lib/api/sessions";
-
-async function currentToken(): Promise<string> {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Not signed in");
-  return user.getIdToken();
-}
 
 const STATUS_LABEL: Record<Session["status"], string> = {
   QUEUED: "Queued",
@@ -22,6 +17,7 @@ const STATUS_LABEL: Record<Session["status"], string> = {
 
 // Conversation and desktop/context panels for one project. Everything here comes from the backend.
 export function ProjectSession({project}: {project: Project}) {
+  const {withToken} = useAuth();
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,7 +42,7 @@ export function ProjectSession({project}: {project: Project}) {
     let cancelled = false;
     (async () => {
       try {
-        const available = await getDesktopStatus(await currentToken(), selectedId);
+        const available = await withToken(token => getDesktopStatus(token, selectedId));
         if (!cancelled) setDesktopAvailable(available);
       } catch {
         if (!cancelled) setDesktopAvailable(null);
@@ -55,14 +51,14 @@ export function ProjectSession({project}: {project: Project}) {
     return () => {
       cancelled = true;
     };
-  }, [selectedId, refreshKey]);
+  }, [selectedId, refreshKey, withToken]);
 
   // Load the project's sessions, and keep the newest one selected when none is.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const list = await listSessions(await currentToken(), project.id);
+        const list = await withToken(token => listSessions(token, project.id));
         if (cancelled) return;
         setSessions(list);
         setSelectedId(current => current ?? list[0]?.id ?? null);
@@ -74,7 +70,7 @@ export function ProjectSession({project}: {project: Project}) {
     return () => {
       cancelled = true;
     };
-  }, [project.id, refreshKey]);
+  }, [project.id, refreshKey, withToken]);
 
   // Load the messages of the selected session.
   useEffect(() => {
@@ -82,7 +78,7 @@ export function ProjectSession({project}: {project: Project}) {
     let cancelled = false;
     (async () => {
       try {
-        const list = await listMessages(await currentToken(), selectedId);
+        const list = await withToken(token => listMessages(token, selectedId));
         if (!cancelled) setMessages(list);
       } catch {
         if (!cancelled) setLoadError("Could not load messages for this session.");
@@ -91,16 +87,22 @@ export function ProjectSession({project}: {project: Project}) {
     return () => {
       cancelled = true;
     };
-  }, [selectedId, refreshKey]);
+  }, [selectedId, refreshKey, withToken]);
 
   async function handleSend(prompt: string) {
     if (!selectedId) return;
     setSendError(null);
     try {
-      await sendFollowUp(await currentToken(), selectedId, prompt);
+      await withToken(token => sendFollowUp(token, selectedId, prompt));
       setRefreshKey(key => key + 1);
-    } catch {
-      setSendError("The message could not be sent. Try again.");
+    } catch (error) {
+      setSendError(
+        error instanceof ApiError && error.code === "auth/email-not-verified"
+          ? "Verify your email before sending messages to the agent."
+          : error instanceof ApiError && error.status === 429
+            ? "You are sending messages too quickly. Wait a moment and try again."
+            : "The message could not be sent. Try again.",
+      );
     }
   }
 

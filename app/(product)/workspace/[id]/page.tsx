@@ -3,11 +3,12 @@
 import {useParams} from "next/navigation";
 
 import {WorkspaceScreen} from "@/components/workspace/workspace-screen";
-import {workspaceSlug} from "@/lib/workspace";
+import type {Me} from "@/lib/api/me";
+import {workspaceRouteId} from "@/lib/auth/home";
 
 // /workspace/<display-name slug>-<uid>
-function isOwnSlugRoute(me: {uid: string; displayName: string | null}, routeId: string): boolean {
-  return me.displayName !== null && `${workspaceSlug(me.displayName)}-${me.uid}` === routeId;
+function isOwnSlugRoute(me: Me, routeId: string): boolean {
+  return workspaceRouteId(me) === routeId;
 }
 
 export default function SlugWorkspacePage() {

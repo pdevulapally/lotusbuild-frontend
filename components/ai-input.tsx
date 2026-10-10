@@ -119,8 +119,12 @@ type AiInputProps = {
   label: string;
   placeholder?: string;
   attachments?: string[];
+  examples?: {label: string; prompt: string}[];
   onSubmit?: (value: string) => void;
   className?: string;
+  // Chip styling for the surface the composer sits on.
+  tone?: 'light' | 'dark';
+  align?: 'center' | 'start';
 };
 
 // Composer with an attachment tray, text input, and voice input.
@@ -129,8 +133,11 @@ export function AiInput({
   label,
   placeholder = 'Ask anything',
   attachments = [],
+  examples = [],
   onSubmit,
   className = '',
+  tone = 'light',
+  align = 'center',
 }: AiInputProps) {
   const [value, setValue] = useState('');
   const inputRef = useRef<ChatComposerInputHandle>(null);
@@ -171,6 +178,29 @@ export function AiInput({
         }
         sendActions={isMounted ? <ChatDictationButton dictation={dictation} /> : null}
       />
+      {examples.length > 0 && (
+        <div
+          className={`mt-4 flex flex-wrap items-center gap-2 ${align === 'start' ? 'justify-start' : 'justify-center'}`}
+          aria-label="Example project prompts">
+          <span className={`mr-1 text-xs ${tone === 'dark' ? 'text-paper/60' : 'text-muted'}`}>Try an idea</span>
+          {examples.map(example => (
+            <button
+              key={example.label}
+              type="button"
+              onClick={() => {
+                setValue(example.prompt);
+                inputRef.current?.focus();
+              }}
+              className={`min-h-11 rounded-full border px-4 py-2 text-xs transition-colors ${
+                tone === 'dark'
+                  ? 'border-white/25 text-paper/85 hover:border-paper hover:bg-white/10 hover:text-paper'
+                  : 'border-line text-muted hover:border-ink hover:bg-white/60 hover:text-ink'
+              }`}>
+              {example.label} <span aria-hidden="true" className="ml-1">↗</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ type SectionIntroProps = {
 };
 
 // Dashed pill with a bar meter, matching the section label design.
-function SectionLabel({ children }: { children: string }) {
+export function SectionLabel({ children }: { children: string }) {
   return (
     <div className="inline-flex items-center gap-3 rounded-full border border-dashed border-line px-5 py-2 text-[13px] uppercase tracking-wide text-ink">
       <span aria-hidden="true" className="flex items-center gap-1">
