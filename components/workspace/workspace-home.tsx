@@ -8,7 +8,8 @@ import {useToast} from "@astryxdesign/core/Toast";
 import {AiInput} from "@/components/ai-input";
 import {BuildStartError, startBuild} from "@/lib/api/build";
 import Link from "next/link";
-import {allowedModels} from "@/lib/api/me";
+import {allowedEfforts, allowedModels} from "@/lib/api/me";
+import type {AiInputOptions} from "@/components/ai-input";
 import {ApiError} from "@/lib/api/client";
 import {workspacePath} from "@/lib/workspace/slug";
 import type {WorkspaceAccount} from "@/lib/workspace/use-account";
@@ -43,7 +44,7 @@ export function WorkspaceHome({account}: {account: ReadyAccount}) {
     });
   }
 
-  async function handleSubmit(prompt: string, model: string) {
+  async function handleSubmit(prompt: string, model: string, options: AiInputOptions) {
     if (!account.me.emailVerified) {
       showBuildError("Verify your email before starting a build.", "auth/email-not-verified");
       return false;
@@ -52,7 +53,7 @@ export function WorkspaceHome({account}: {account: ReadyAccount}) {
     setCreatedProjectId(null);
     try {
       const token = await account.user.getIdToken();
-      const projectId = await startBuild(token, prompt, model);
+      const projectId = await startBuild(token, prompt, model, options);
       router.push(workspacePath(account.username, projectId));
     } catch (failure) {
       if (failure instanceof BuildStartError) setCreatedProjectId(failure.projectId);
@@ -75,6 +76,8 @@ export function WorkspaceHome({account}: {account: ReadyAccount}) {
           label="Describe what you want to build"
           onSubmit={handleSubmit}
           models={allowedModels(account.me)}
+          effortOptions={allowedEfforts(account.me)}
+          sessionControls
           isDisabled={isSubmitting}
           variant="glass"
         />

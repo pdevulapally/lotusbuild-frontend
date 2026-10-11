@@ -64,6 +64,18 @@ test("composer keeps pending progress in its button, preserves a failed draft, a
   await act(async () => (rootElement.querySelector('button[aria-label="Send"]') as HTMLElement).click());
   await act(async () => resolve?.(true));
   assert.equal(textbox.textContent, "");
+  let submittedOptions: unknown;
+  await act(async () => root.render(createElement(AiInput, {key: "controls", label: "Test controls", sessionModel: undefined,
+    models: ["model"], effortOptions: ["low", "standard", "high"], sessionControls: true, compact: true,
+    onSubmit: async (_text: string, _model: string, options: unknown) => {submittedOptions = options;}})));
+  const modeButton = [...rootElement.querySelectorAll("button")].find(button => button.textContent?.trim() === "build") as HTMLElement;
+  await act(async () => modeButton.click());
+  const planButton = [...rootElement.querySelectorAll('[role="option"] button')].find(button => button.textContent?.includes("plan")) as HTMLElement;
+  await act(async () => planButton.click());
+  const controlledTextbox = rootElement.querySelector('[role="textbox"]') as HTMLElement;
+  await act(async () => {controlledTextbox.textContent = "Plan it"; controlledTextbox.dispatchEvent(new dom.window.Event("input", {bubbles: true}));});
+  await act(async () => (rootElement.querySelector('button[aria-label="Send"]') as HTMLElement).click());
+  assert.deepEqual(submittedOptions, {mode: "plan", effort: "high"});
   let stops = 0;
   await act(async () => root.render(createElement(AiInput, {key: "failure", label: "Test composer", sessionModel: "model", compact: true,
     isWorking: true, queuedCount: 2, onStop: () => {stops++;}, onSubmit: async () => {throw new Error("Uncertain response");}})));

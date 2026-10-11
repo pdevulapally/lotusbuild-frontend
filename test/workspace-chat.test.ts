@@ -72,6 +72,13 @@ test("only account-supplied models are offered; missing/unrestricted allowlists 
   assert.deepEqual(allowedModels({...me, capabilities: [{...me.capabilities[0], value: []}]}), []);
 });
 
+test("reasoning effort options stop at the backend entitlement ceiling", async () => {
+  const {allowedEfforts} = await import("../lib/api/me.js");
+  const base = {uid: "u", email: "u@example.com", emailVerified: true, displayName: null, plan: {key: "pro", name: "Pro"}};
+  assert.deepEqual(allowedEfforts({...base, capabilities: [{key: "ai.effort", kind: "string", value: "high"}]}), ["low", "standard", "high"]);
+  assert.deepEqual(allowedEfforts({...base, capabilities: [{key: "ai.effort", kind: "string", value: "unknown"}]}), []);
+});
+
 test("distinct follow-up acceptance responses are checked, invalid responses fail", () => {
   assert.equal("steered" in parseFollowUpResponse({steered: true, sessionId: "s"}), true);
   assert.equal("queuedMessage" in parseFollowUpResponse({queued: true, queuedMessage: {id: "q", sessionId: "s", prompt: "p", createdAt: "now"}}), true);

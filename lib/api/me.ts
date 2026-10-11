@@ -18,6 +18,15 @@ export function allowedModels(me: Me): string[] {
   return [...new Set(capability.value as string[])];
 }
 
+const AI_EFFORTS = ["low", "standard", "high", "xhigh"] as const;
+
+export function allowedEfforts(me: Me): (typeof AI_EFFORTS)[number][] {
+  const capability = me.capabilities?.find(item => item.key === "ai.effort");
+  if (capability?.kind !== "string" || typeof capability.value !== "string") return [];
+  const maximum = AI_EFFORTS.indexOf(capability.value as (typeof AI_EFFORTS)[number]);
+  return maximum < 0 ? [] : AI_EFFORTS.slice(0, maximum + 1);
+}
+
 // Requires a Firebase ID token. The backend verifies it on every call.
 export function getMe(token: string) {
   return apiRequest<Me>("/me", {token});
