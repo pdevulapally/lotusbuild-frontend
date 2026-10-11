@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:chat": "node test/run-chat-tests.mjs"
+    "test:chat": "node test/run-chat-tests.mjs",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview",
+    "deploy:vinext": "vinext-cloudflare deploy"
   },
   "dependencies": {
     "@astryxdesign/core": "^0.6.5",
@@ -26,15 +30,25 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.63.1",
     "@tailwindcss/postcss": "^4",
     "@types/jsdom": "30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vinext/cloudflare": "^1.1.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "@vitejs/plugin-rsc": "^0.5.34",
+    "cf": "^1.0.0-beta.14",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "jsdom": "30.1.2",
+    "react-server-dom-webpack": "^19.2.8",
     "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "vinext": "^1.1.0",
+    "vite": "^8.0.0",
+    "vite-css-modules": "^1.16.0"
+  },
+  "type": "module"
 }

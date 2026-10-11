@@ -29,8 +29,13 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy on Cloudflare Workers
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The production Worker is built from `master` through Cloudflare Workers Builds.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Build command: `npm run build:vinext`
+- Deploy command: `npm run deploy:vinext -- --skip-build`
+- Root directory: `/`
+
+Configure the `NEXT_PUBLIC_API_BASE_URL` and Firebase `NEXT_PUBLIC_*` values as
+Cloudflare build variables before the first deployment.
