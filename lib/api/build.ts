@@ -1,5 +1,5 @@
 import {createProject} from "./projects";
-import {createSession} from "./sessions";
+import {createSession, type AiEffort, type SessionMode} from "./sessions";
 
 const MAX_NAME_LENGTH = 100;
 
@@ -20,10 +20,15 @@ function projectNameFromPrompt(prompt: string): string {
 // Creates a project and starts its first session from a prompt. Shared by
 // every "describe what to build" entry point (landing hero, workspace empty
 // state) so they create projects the same way. Returns the new project id.
-export async function startBuild(token: string, prompt: string, model: string): Promise<string> {
+export async function startBuild(
+  token: string,
+  prompt: string,
+  model: string,
+  options?: {effort?: AiEffort; mode?: SessionMode},
+): Promise<string> {
   const project = await createProject(token, {name: projectNameFromPrompt(prompt)});
   try {
-    await createSession(token, project.id, {prompt, model});
+    await createSession(token, project.id, {prompt, model, ...options});
   } catch (error) {
     // A timed-out POST may have succeeded. Preserve the project and allow
     // reconciliation instead of deleting a possibly running build.

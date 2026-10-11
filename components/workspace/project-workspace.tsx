@@ -11,7 +11,8 @@ import {requireIdToken} from "@/lib/firebase/token";
 import type {Project} from "@/lib/api/projects";
 import {cancelSession, createSession, listMessages, listQueuedMessages, listSessions, sendFollowUp, type QueuedMessage, type Message, type Session} from "@/lib/api/sessions";
 import {ApiError} from "@/lib/api/client";
-import {allowedModels} from "@/lib/api/me";
+import {allowedEfforts, allowedModels} from "@/lib/api/me";
+import type {AiInputOptions} from "@/components/ai-input";
 import type {SessionEvent} from "@/lib/api/session-events";
 import type {WorkspaceAccount} from "@/lib/workspace/use-account";
 
@@ -147,7 +148,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
     };
   }, [account.user, selectedId, refreshKey]);
 
-  async function handleSend(prompt: string, model: string) {
+  async function handleSend(prompt: string, model: string, options: AiInputOptions) {
     if (pendingPrompt) return false;
     setSendError(null);
     setAcceptance(null);
@@ -160,7 +161,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
         if ("session" in result) setSessions(current => current?.map(session => session.id === result.session.id ? result.session : session) ?? [result.session]);
         if ("queuedMessage" in result) setQueuedMessages(current => [...current, result.queuedMessage]);
       } else {
-        const session = await createSession(token, project.id, {prompt, model});
+        const session = await createSession(token, project.id, {prompt, model, ...options});
         setSessions([session]);
         setSelectedId(session.id);
         setAcceptance("Accepted. Waiting for the agent.");
@@ -328,6 +329,9 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
           models={allowedModels(account.me)}
           sessionModel={selected?.model}
           effort={selected?.effort}
+          effortOptions={allowedEfforts(account.me)}
+          sessionMode={selected?.mode}
+          sessionControls={!selected}
           isDisabled={sessions === null || Boolean(loadError) || Boolean(selectedId && messagesId !== selectedId) || !account.me.emailVerified || isStopping && active}
           compact
           className={`mx-auto w-full shrink-0 px-4 pb-4 pt-3 transition-[max-width] duration-300 sm:px-6 sm:pb-6 ${

@@ -2,13 +2,16 @@ import {apiRequest} from "./client";
 
 // Shapes confirmed by the backend audit (sessions/routes.ts toResponse / toMessageResponse).
 export type SessionStatus = "QUEUED" | "RUNNING" | "IDLE" | "FAILED";
+export type AiEffort = "low" | "standard" | "high" | "xhigh";
+export type SessionMode = "build" | "plan";
 
 export type Session = {
   id: string;
   projectId: string;
   status: SessionStatus;
   model: string;
-  effort: string;
+  effort: AiEffort;
+  mode: SessionMode;
   sandboxId: string | null;
   error: string | null;
   messageCount: number;
@@ -82,7 +85,12 @@ export async function sendFollowUp(token: string, sessionId: string, prompt: str
 }
 
 // Confirmed by sessions/routes.ts: 201 returns the full session resource.
-export function createSession(token: string, projectId: string, input: {prompt: string; model: string}) {
+export function createSession(token: string, projectId: string, input: {
+  prompt: string;
+  model: string;
+  effort?: AiEffort;
+  mode?: SessionMode;
+}) {
   return apiRequest<Session>(`/projects/${encodeURIComponent(projectId)}/sessions`, {
     method: "POST",
     token,

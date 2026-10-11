@@ -10,6 +10,9 @@ import {
 } from '@astryxdesign/core/Chat';
 import type {CSSProperties} from 'react';
 import {IconArrowUp, IconLoader2, IconPlayerStop} from '@tabler/icons-react';
+import type {AiEffort, SessionMode} from '@/lib/api/sessions';
+
+export type AiInputOptions = {effort?: AiEffort; mode: SessionMode};
 
 function modelLabel(model: string): string {
   return model
@@ -117,6 +120,47 @@ function ModelSelect({
   );
 }
 
+function ModeSelect({value, onChange}: {value: SessionMode; onChange: (value: SessionMode) => void}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const descriptions: Record<SessionMode, string> = {
+    build: 'Edit files, run tools, and build the project',
+    plan: 'Inspect the project and return a read-only plan',
+  };
+
+  return (
+    <div className="relative" onBlur={event => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
+    }} onKeyDown={event => {
+      if (event.key === 'Escape') setIsOpen(false);
+    }}>
+      <button type="button" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen(open => !open)}
+        className="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px] font-medium capitalize text-ink/65 hover:bg-ink/5 hover:text-ink">
+        {value}
+        <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round" className={`text-ink/45 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          <path d="M2.25 3.75 5 6.5l2.75-2.75" />
+        </svg>
+      </button>
+      {isOpen && (
+        <ul role="listbox" aria-label="Session mode"
+          className="absolute bottom-full left-0 z-20 mb-2 w-72 rounded-xl border border-line/80 bg-paper p-1.5 shadow-[0_18px_50px_-18px_rgba(38,38,38,0.4)]">
+          {(['build', 'plan'] as const).map(option => (
+            <li key={option} role="option" aria-selected={value === option}>
+              <button type="button" onClick={() => {onChange(option); setIsOpen(false);}}
+                className={`flex w-full flex-col rounded-lg px-2.5 py-2 text-left ${
+                  value === option ? 'bg-line/55 text-ink' : 'text-ink/70 hover:bg-line/35 hover:text-ink'
+                }`}>
+                <span className="text-[13px] font-medium capitalize">{option}</span>
+                <span className="text-[11px] leading-4 text-muted">{descriptions[option]}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // LotusBuild palette (matches app/globals.css) applied to the composer's tokens.
 const composerTheme = {
   '--color-background-popover': '#f7f5f3',
@@ -146,10 +190,13 @@ const glassTheme = {
 type AiInputProps = {
   label: string;
   placeholder?: string;
-  onSubmit?: (value: string, model: string) => boolean | void | Promise<boolean | void>;
+  onSubmit?: (value: string, model: string, options: AiInputOptions) => boolean | void | Promise<boolean | void>;
   models?: string[];
   sessionModel?: string;
   effort?: string;
+  effortOptions?: AiEffort[];
+  sessionMode?: SessionMode;
+  sessionControls?: boolean;
   compact?: boolean;
   allowUnconfiguredSubmit?: boolean;
   isDisabled?: boolean;
@@ -181,6 +228,9 @@ export function AiInput({
   models = [],
   sessionModel,
   effort,
+  effortOptions = [],
+  sessionMode,
+  sessionControls = false,
   compact = false,
   allowUnconfiguredSubmit = false,
   variant = 'default',
@@ -190,6 +240,8 @@ export function AiInput({
   const inputRef = useRef<ChatComposerInputHandle>(null);
   const dictation = useChatDictation({inputRef});
   const [chosenModel, setModel] = useState('');
+  const [chosenEffort, setEffort] = useState<AiEffort | undefined>(effortOptions.at(-1));
+  const [chosenMode, setMode] = useState<SessionMode>('build');
   const model = sessionModel ?? (models.includes(chosenModel) ? chosenModel : models[0] ?? '');
   const submitting = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -201,7 +253,10 @@ export function AiInput({
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      if (await onSubmit(text, model) !== false) setValue('');
+      if (await onSubmit(text, model, {
+        mode: sessionMode ?? chosenMode,
+        ...(sessionMode || effort ? {} : {effort: chosenEffort}),
+      }) !== false) setValue('');
     } catch {
       setSubmitError('Could not confirm delivery. Check the conversation before sending again.');
     } finally {
@@ -249,6 +304,14 @@ export function AiInput({
           models.length > 0 ? <ModelSelect value={model} options={models} onChange={setModel} /> :
           <span className="text-[12px] text-muted">{allowUnconfiguredSubmit ? "Sign in to choose a model" : "Available models could not be loaded."}</span>}
           {effort && <span className="shrink-0 rounded-lg px-2 py-1.5 text-[12px] capitalize text-ink/45" title="Reasoning effort is set by your plan">{effort} effort</span>}
+          {sessionMode && <span className="shrink-0 rounded-lg px-2 py-1.5 text-[12px] capitalize text-ink/45">{sessionMode}</span>}
+          {sessionControls && !sessionMode && <ModeSelect value={chosenMode} onChange={setMode} />}
+          {sessionControls && !effort && effortOptions.length > 0 && (
+            <select aria-label="Reasoning effort" value={chosenEffort} onChange={event => setEffort(event.target.value as AiEffort)}
+              className="rounded-lg bg-transparent px-1 py-1.5 text-[12px] capitalize text-ink/60 outline-none">
+              {effortOptions.map(option => <option key={option} value={option}>{option} effort</option>)}
+            </select>
+          )}
           {queuedCount > 0 && <span className="shrink-0 text-[12px] text-muted">{queuedCount} queued</span>}
           </div>
         }
