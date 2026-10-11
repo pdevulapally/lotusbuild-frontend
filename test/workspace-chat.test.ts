@@ -5,6 +5,7 @@ import {initialActivity, reduceActivity} from "../lib/workspace/activity";
 import {allowedModels} from "../lib/api/me";
 import {parseFollowUpResponse, sendFollowUp} from "../lib/api/sessions";
 import {startBuild, BuildStartError} from "../lib/api/build";
+import {apiRequest, ApiError} from "../lib/api/client";
 
 const event = (type: string, data: Record<string, unknown> = {}) => ({id: "18446744073709551615-0", type, data});
 
@@ -90,6 +91,21 @@ test("follow-up POST is authenticated, encoded and never retried on ambiguous fa
   };
   try { await assert.rejects(sendFollowUp("test-token", "a/b", "hello")); assert.equal(calls, 1); }
   finally { globalThis.fetch = original; }
+});
+
+test("API errors preserve the backend's nested stable code and safe message", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    error: {code: "project/limit-reached", message: "The Free plan allows 3 projects.", details: {limit: 3}},
+    requestId: "req-test",
+  }), {status: 403, headers: {"content-type": "application/json"}});
+  try {
+    await assert.rejects(apiRequest("/projects", {method: "POST", body: {name: "test"}, token: "token"}), error =>
+      error instanceof ApiError &&
+      error.status === 403 &&
+      error.code === "project/limit-reached" &&
+      error.message === "The Free plan allows 3 projects.");
+  } finally { globalThis.fetch = original; }
 });
 
 test("uncertain session creation preserves the created project rather than deleting it", async () => {

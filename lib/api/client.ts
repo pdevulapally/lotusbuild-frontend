@@ -56,8 +56,15 @@ async function send<T>(path: string, init: ApiRequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const problem = (await response.json().catch(() => ({}))) as {code?: string; message?: string};
-    throw new ApiError(response.status, problem.code, problem.message ?? `Request failed with ${response.status}`);
+    const payload = (await response.json().catch(() => ({}))) as {
+      error?: {code?: unknown; message?: unknown};
+      code?: unknown;
+      message?: unknown;
+    };
+    const nested = payload.error && typeof payload.error === "object" ? payload.error : undefined;
+    const code = typeof nested?.code === "string" ? nested.code : typeof payload.code === "string" ? payload.code : undefined;
+    const message = typeof nested?.message === "string" ? nested.message : typeof payload.message === "string" ? payload.message : undefined;
+    throw new ApiError(response.status, code, message ?? `Request failed with ${response.status}`);
   }
   if (response.status === 204) return undefined as T;
   const text = await response.text();

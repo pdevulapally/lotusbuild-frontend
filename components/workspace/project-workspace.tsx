@@ -59,7 +59,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const latestTurn = latestUserIndex < 0 ? [] : visibleMessages.slice(latestUserIndex);
   const renderMessage = (message: Message) => message.role === "user" ? (
     <div key={message.seq} className="flex justify-end">
-      <p className="max-w-[90%] whitespace-pre-wrap break-words rounded-2xl bg-line/45 px-4 py-2.5 text-[14px] leading-5 text-ink">{message.content}</p>
+      <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-[18px] bg-line/55 px-4 py-2.5 text-[14px] leading-6 text-ink">{message.content}</p>
     </div>
   ) : <ChatMessage key={message.seq} content={message.content} />;
 
@@ -178,7 +178,11 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const handleEvent = useCallback((event?: SessionEvent) => {
     if (event?.type === "desktop.ready" || event?.type === "desktop.ended") {
       setDesktop(current => ({sessionId: selectedId!, ended: event.type === "desktop.ended", revision: (current?.revision ?? 0) + 1}));
-      if (event.type === "desktop.ready") setViewerEnabled(true);
+      if (event.type === "desktop.ready") {
+        setViewerEnabled(true);
+        setRightTab("desktop");
+        setIsPanelOpen(true);
+      }
     }
     if (!event && selectedId) setDesktop(current => ({sessionId: selectedId, ended: false, revision: (current?.revision ?? 0) + 1}));
     if (event && ["agent.finished", "session.idle", "session.failed"].includes(event.type)) {
@@ -191,9 +195,9 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
 
   return (
     <div
-      className={`grid w-full min-w-0 md:h-dvh ${isPanelOpen ? "xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,1fr)]" : ""}`}>
-      <section aria-label="Project chat" className="flex h-dvh min-h-0 min-w-0 flex-col bg-line/20">
-        <header className="flex h-12 shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
+      className={`grid w-full min-w-0 md:h-dvh ${isPanelOpen ? "xl:grid-cols-[minmax(28rem,17fr)_minmax(30rem,23fr)]" : ""}`}>
+      <section aria-label="Project chat" className="flex h-[calc(100dvh-3.5rem)] min-h-0 min-w-0 flex-col bg-paper md:h-dvh">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 sm:px-6">
           <h1 className="flex min-w-0 items-center gap-2 truncate font-sans text-[13px] font-medium text-muted">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" className="shrink-0 text-ink/60">
               <path d="M2 4.5a1 1 0 0 1 1-1h3.1l1.2 1.5H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7.5Z" />
@@ -237,8 +241,10 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
         )}
 
         <div className="relative min-h-0 flex-1">
-        <div ref={scrollRef} onScroll={event => { const element = event.currentTarget; pinnedToBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100; setShowJump(!pinnedToBottom.current); }} className="chat-scroll flex h-full min-h-0 justify-center overflow-y-auto px-5 py-6 sm:px-8">
-          <div ref={contentRef} className="flex w-full max-w-[44rem] flex-col gap-8 pb-4">
+        <div ref={scrollRef} onScroll={event => { const element = event.currentTarget; pinnedToBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100; setShowJump(!pinnedToBottom.current); }} className="chat-scroll flex h-full min-h-0 justify-center overflow-y-auto px-5 py-8 sm:px-8">
+          <div ref={contentRef} className={`flex w-full flex-col gap-10 pb-4 transition-[max-width] duration-300 ${
+            isPanelOpen ? "max-w-[42rem]" : "max-w-[50rem]"
+          }`}>
             {loadError && <p role="alert" className="text-[14px] text-accent">{loadError} <button type="button" onClick={refresh} className="underline">Retry</button></p>}
             {!loadError && (sessions === null || selectedId && messagesId !== selectedId) && <p role="status" className="text-[14px] text-muted">Loading conversation…</p>}
             {!loadError && sessions !== null && sessions.length === 0 && (
@@ -276,29 +282,44 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
           sessionModel={selected?.model}
           isDisabled={sessions === null || Boolean(loadError) || Boolean(selectedId && messagesId !== selectedId) || !account.me.emailVerified || isStopping && active}
           compact
-          className="mx-auto max-w-[48rem] shrink-0 px-4 pb-4 pt-3 sm:px-6 sm:pb-6"
+          className={`mx-auto w-full shrink-0 px-4 pb-4 pt-3 transition-[max-width] duration-300 sm:px-6 sm:pb-6 ${
+            isPanelOpen ? "max-w-[44rem]" : "max-w-[52rem]"
+          }`}
         />
         {!account.me.emailVerified && <p className="px-6 pb-3 text-center text-[13px] text-muted">Verify your email before sending messages.</p>}
       </section>
 
-        <aside className={`${isPanelOpen ? "flex" : "hidden"} min-h-80 min-w-0 flex-col border-t border-line bg-line/20 xl:h-dvh xl:border-l xl:border-t-0`}>
-          <div className="flex h-14 items-center gap-1 px-6 text-[13px]" role="tablist">
-            {(["desktop", "context"] as const).map(tab => (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={rightTab === tab}
-                onClick={() => setRightTab(tab)}
-                className={`rounded-full px-3 py-1.5 capitalize transition-colors duration-200 ${
-                  rightTab === tab ? "bg-paper text-ink" : "text-ink/60 hover:text-ink"
-                }`}>
-                {tab}
-              </button>
-            ))}
+        <aside className={`${isPanelOpen ? "flex" : "hidden"} fixed inset-x-0 bottom-0 top-14 z-30 min-w-0 flex-col border-t border-line bg-paper md:top-0 xl:static xl:h-dvh xl:min-h-80 xl:border-l xl:border-t-0 xl:bg-line/20`}>
+          <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 text-[13px] sm:px-5">
+            <div className="flex h-full items-center gap-5" role="tablist">
+              {(["desktop", "context"] as const).map(tab => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={rightTab === tab}
+                  onClick={() => setRightTab(tab)}
+                  className={`relative flex h-full items-center border-b-2 px-0.5 capitalize transition-colors duration-200 ${
+                    rightTab === tab ? "border-ink text-ink" : "border-transparent text-ink/50 hover:text-ink"
+                  }`}>
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              aria-label="Close desktop and context"
+              onClick={() => setIsPanelOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink/50 transition-colors hover:bg-line/45 hover:text-ink">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="m3.5 3.5 7 7m0-7-7 7" />
+              </svg>
+            </button>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col gap-6 p-6">
+          <div className={`flex min-h-0 flex-1 flex-col ${
+            rightTab === "desktop" ? "gap-4 p-3 sm:p-4" : "overflow-y-auto"
+          }`}>
             {rightTab === "desktop" ? (
                 selected ? <DesktopViewer key={selected.id} sessionId={selected.id}
                   revision={desktop?.sessionId === selected.id ? desktop.revision : 0}
@@ -308,40 +329,68 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                   <p className="text-[14px] text-ink/60">Select a session to see its desktop.</p>
                 )
             ) : (
-              <dl className="flex flex-col gap-4 text-[14px]">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-ink/60">Platform</dt>
-                  <dd className="capitalize text-ink">{project.platform}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-ink/60">Project status</dt>
-                  <dd className="capitalize text-ink">{project.status}</dd>
-                </div>
+              <div className="text-[13px]">
+                <section className="px-5 py-5">
+                  <h2 className="text-[14px] font-medium text-ink">Project context</h2>
+                  <p className="mt-1.5 max-w-prose leading-5 text-ink/55">
+                    {project.description || project.name}
+                  </p>
+                </section>
+
+                <section className="border-t border-line/60 px-5 py-5">
+                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Project</h3>
+                  <dl className="space-y-3">
+                    <div className="flex items-center justify-between gap-5">
+                      <dt className="text-ink/55">Platform</dt>
+                      <dd className="capitalize text-ink">{project.platform}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-5">
+                      <dt className="text-ink/55">Status</dt>
+                      <dd className="capitalize text-ink">{project.status}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-5">
+                      <dt className="text-ink/55">Created</dt>
+                      <dd className="text-ink">{new Date(project.createdAt).toLocaleDateString()}</dd>
+                    </div>
+                  </dl>
+                </section>
+
                 {selected && (
-                  <>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-ink/60">Session status</dt>
-                      <dd className="text-ink">{STATUS_LABEL[selected.status]}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-ink/60">Sandbox</dt>
-                      <dd className="break-all text-ink">{selected.sandboxId ?? "Not started"}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-ink/60">Model</dt>
-                      <dd className="break-all text-ink">{selected.model}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-ink/60">Messages</dt>
-                      <dd className="text-ink">{selected.messageCount}</dd>
-                    </div>
-                  </>
+                  <section className="border-t border-line/60 px-5 py-5">
+                    <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Current session</h3>
+                    <dl className="space-y-3">
+                      <div className="flex items-center justify-between gap-5">
+                        <dt className="text-ink/55">Status</dt>
+                        <dd className="flex items-center gap-2 text-ink">
+                          <span className={`size-1.5 rounded-full ${
+                            selected.status === "RUNNING" ? "bg-emerald-500" :
+                            selected.status === "FAILED" ? "bg-accent" : "bg-ink/30"
+                          }`} />
+                          {STATUS_LABEL[selected.status]}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-5">
+                        <dt className="text-ink/55">Model</dt>
+                        <dd className="max-w-[65%] truncate text-ink" title={selected.model}>{selected.model}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-5">
+                        <dt className="text-ink/55">Effort</dt>
+                        <dd className="capitalize text-ink">{selected.effort}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-5">
+                        <dt className="text-ink/55">Messages</dt>
+                        <dd className="text-ink">{selected.messageCount}</dd>
+                      </div>
+                      <div className="flex items-start justify-between gap-5">
+                        <dt className="text-ink/55">Sandbox</dt>
+                        <dd className="max-w-[65%] truncate font-mono text-[12px] text-ink" title={selected.sandboxId ?? undefined}>
+                          {selected.sandboxId ?? "Not started"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </section>
                 )}
-                <div className="flex justify-between gap-4">
-                  <dt className="text-ink/60">Created</dt>
-                  <dd className="text-ink">{new Date(project.createdAt).toLocaleDateString()}</dd>
-                </div>
-              </dl>
+              </div>
             )}
           </div>
         </aside>

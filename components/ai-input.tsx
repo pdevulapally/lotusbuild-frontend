@@ -11,7 +11,19 @@ import {
 import type {CSSProperties} from 'react';
 import {IconArrowUp, IconLoader2, IconPlayerStop} from '@tabler/icons-react';
 
-// Agent model picker: pill trigger with a floating, check-marked menu.
+function modelLabel(model: string): string {
+  return model
+    .split(/[-_.]+/)
+    .map(part => {
+      if (/^\d+$/.test(part)) return part;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(' ')
+    .replace(/(\d) (\d)/g, '$1.$2');
+}
+
+// The options are supplied by the authenticated account's backend capability
+// allowlist. The picker only presents that catalogue; it never invents models.
 function ModelSelect({
   value,
   options,
@@ -37,20 +49,20 @@ function ModelSelect({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(open => !open)}
-        className="flex items-center gap-2 rounded-full border border-line bg-paper py-2 pl-3 pr-3.5 text-[13px] font-medium text-ink transition-colors duration-200 hover:border-ink">
-        {value}
+        className="group flex max-w-52 items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px] font-medium text-ink/65 transition-colors duration-150 hover:bg-ink/5 hover:text-ink">
+        <span className="truncate">{modelLabel(value)}</span>
         <svg
           aria-hidden="true"
-          width="12"
-          height="12"
-          viewBox="0 0 12 12"
+          width="10"
+          height="10"
+          viewBox="0 0 10 10"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-          <path d="M3 4.5l3 3 3-3" />
+          className={`shrink-0 text-ink/45 transition-transform duration-150 group-hover:text-ink/70 ${isOpen ? 'rotate-180' : ''}`}>
+          <path d="M2.25 3.75 5 6.5l2.75-2.75" />
         </svg>
       </button>
 
@@ -58,7 +70,11 @@ function ModelSelect({
         <ul
           role="listbox"
           aria-label="Agent model"
-          className="absolute bottom-full left-0 z-20 mb-2 w-60 overflow-hidden rounded-2xl border border-line bg-paper p-1.5 shadow-[0_16px_40px_-12px_rgba(38,38,38,0.25)]">
+          className="absolute bottom-full left-0 z-20 mb-2 w-72 overflow-hidden rounded-xl border border-line/80 bg-paper p-1.5 shadow-[0_18px_50px_-18px_rgba(38,38,38,0.4)]">
+          <li aria-hidden="true" className="px-2.5 pb-2 pt-1.5">
+            <p className="text-[12px] font-semibold text-ink">Select model</p>
+            <p className="mt-0.5 text-[11px] leading-4 text-muted">Available to your account</p>
+          </li>
           {options.map(option => {
             const selected = option === value;
             return (
@@ -69,11 +85,12 @@ function ModelSelect({
                     onChange(option);
                     setIsOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[14px] transition-colors duration-150 ${
-                    selected ? 'bg-line/60 text-ink' : 'text-muted hover:bg-line/40 hover:text-ink'
+                  className={`flex w-full items-center justify-between gap-4 rounded-lg px-2.5 py-2 text-left transition-colors duration-150 ${
+                    selected ? 'bg-line/55 text-ink' : 'text-ink/70 hover:bg-line/35 hover:text-ink'
                   }`}>
-                  <span className="flex items-center gap-2.5">
-                    {option}
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-[13px] font-medium">{modelLabel(option)}</span>
+                    <span className="truncate text-[10px] text-muted">{option}</span>
                   </span>
                   {selected && (
                     <svg
@@ -85,7 +102,8 @@ function ModelSelect({
                       stroke="currentColor"
                       strokeWidth="1.6"
                       strokeLinecap="round"
-                      strokeLinejoin="round">
+                      strokeLinejoin="round"
+                      className="shrink-0">
                       <path d="M2.5 7.5l3 3 6-6.5" />
                     </svg>
                   )}
@@ -117,11 +135,12 @@ const composerTheme = {
 // backdrop-blur needs a see-through background to actually blur anything).
 const glassTheme = {
   ...composerTheme,
-  '--color-background-popover': 'rgba(247, 245, 243, 0.55)',
-  '--color-background-surface': 'rgba(247, 245, 243, 0.55)',
-  '--color-background-card': 'rgba(247, 245, 243, 0.55)',
-  '--color-background-muted': 'rgba(239, 235, 231, 0.55)',
-  '--color-border-emphasized': 'rgba(255, 255, 255, 0.4)',
+  '--color-background-popover': 'rgba(247, 245, 243, 0.86)',
+  '--color-background-surface': 'rgba(247, 245, 243, 0.86)',
+  '--color-background-card': 'rgba(247, 245, 243, 0.86)',
+  '--color-background-muted': 'rgba(239, 235, 231, 0.78)',
+  '--color-border': 'rgba(255, 255, 255, 0.76)',
+  '--color-border-emphasized': 'rgba(255, 255, 255, 0.82)',
 } as CSSProperties;
 
 type AiInputProps = {
@@ -201,7 +220,7 @@ export function AiInput({
 
   return (
     <div
-      className={`workspace-composer w-full text-left ${isGlass ? 'backdrop-blur-2xl backdrop-saturate-150' : ''} ${className}`}
+      className={`workspace-composer w-full text-left ${isGlass ? 'drop-shadow-[0_18px_38px_rgba(38,38,38,0.18)] backdrop-blur-2xl backdrop-saturate-150' : ''} ${className}`}
       style={isGlass ? glassTheme : composerTheme}>
       <ChatComposer
         density={compact ? "balanced" : "spacious"}
@@ -224,7 +243,7 @@ export function AiInput({
           style={{minHeight: compact ? 56 : 96, maxHeight: 200, overflowY: 'auto'}} />}
         footerActions={
           <div className="flex min-w-0 items-center gap-3">
-          {sessionModel ? <span className="truncate px-1 text-[12px] text-muted">{sessionModel}</span> :
+          {sessionModel ? <span className="truncate px-2 py-1.5 text-[12px] font-medium text-ink/55">{modelLabel(sessionModel)}</span> :
           models.length > 0 ? <ModelSelect value={model} options={models} onChange={setModel} /> :
           <span className="text-[12px] text-muted">{allowUnconfiguredSubmit ? "Sign in to choose a model" : "Available models could not be loaded."}</span>}
           {queuedCount > 0 && <span className="shrink-0 text-[12px] text-muted">{queuedCount} queued</span>}

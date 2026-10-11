@@ -1,10 +1,13 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
+import {createPortal} from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import {signOut} from "firebase/auth";
+import {IconTrash} from "@tabler/icons-react";
+import {AlertDialog} from "@astryxdesign/core/AlertDialog";
 
 import {auth} from "@/lib/firebase/client";
 import {deleteProject, listProjects, type Project} from "@/lib/api/projects";
@@ -131,7 +134,7 @@ function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 hidden items-center justify-center bg-ink/5 px-6 md:flex" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/5 px-4 sm:px-6" onMouseDown={onClose}>
       <div
         role="dialog"
         aria-label="Search projects"
@@ -184,36 +187,77 @@ function ProjectRow({
   href,
   isActive,
   onDelete,
+  onNavigate,
 }: {
   project: Project;
   href: string;
   isActive: boolean;
   onDelete: () => void;
+  onNavigate: () => void;
 }) {
   const [menuState, setMenuState] = useState<"closed" | "open" | "confirming">("closed");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState<{left: number; top: number} | null>(null);
+
+  useEffect(() => {
+    if (menuState !== "open") {
+      setMenuPosition(null);
+      return;
+    }
+
+    const positionMenu = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const menuWidth = 208;
+        setMenuPosition({
+          left: Math.min(rect.right + 10, window.innerWidth - menuWidth - 12),
+          top: Math.min(rect.top, window.innerHeight - 52),
+        });
+      }
+    };
+    const closeFromOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) setMenuState("closed");
+    };
+    const closeFromEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuState("closed");
+    };
+
+    positionMenu();
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
+    document.addEventListener("pointerdown", closeFromOutside);
+    document.addEventListener("keydown", closeFromEscape);
+    return () => {
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
+      document.removeEventListener("pointerdown", closeFromOutside);
+      document.removeEventListener("keydown", closeFromEscape);
+    };
+  }, [menuState]);
 
   return (
-    <li
-      className="group relative"
-      onBlur={event => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setMenuState("closed");
-      }}>
+    <li className="group relative">
       <Link
         href={href}
-        className={`flex items-center rounded-lg py-2.5 pl-3 pr-9 transition-colors duration-150 ${
-          isActive ? "bg-line/60" : "hover:bg-line/40"
+        onClick={onNavigate}
+        className={`flex items-center rounded-md border py-2.5 pl-3 pr-9 transition-colors duration-150 ${
+          isActive ? "border-line/80 bg-line/45" : "border-transparent hover:bg-line/35"
         }`}>
         <span className="truncate text-[13px] font-semibold leading-snug text-ink">{project.name}</span>
       </Link>
 
       <button
+        ref={triggerRef}
         type="button"
         aria-label="Project actions"
         aria-haspopup="menu"
         aria-expanded={menuState !== "closed"}
         onClick={() => setMenuState(state => (state === "closed" ? "open" : "closed"))}
-        className={`absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-ink/60 transition-colors duration-150 hover:bg-line/60 hover:text-ink ${
-          menuState === "closed" ? "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100" : ""
+        className={`absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-ink/55 transition-colors duration-150 hover:bg-line/60 hover:text-ink ${
+          menuState === "closed" ? "md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100" : ""
         }`}>
         <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
           <circle cx="3" cy="7" r="1.1" />
@@ -222,32 +266,44 @@ function ProjectRow({
         </svg>
       </button>
 
-      {menuState !== "closed" && (
+      {menuState === "open" && menuPosition && createPortal(
         <div
+          ref={menuRef}
           role="menu"
-          className="absolute right-1.5 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl bg-paper p-1 shadow-[0_16px_40px_-12px_rgba(38,38,38,0.5)]">
-          {menuState === "open" ? (
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => setMenuState("confirming")}
-              className="w-full rounded-lg px-3 py-2 text-left text-[13px] text-ink transition-colors duration-150 hover:bg-line/40">
-              Delete project
-            </button>
-          ) : (
-            <div className="flex flex-col gap-1 p-1">
-              <p className="px-2 pb-1 text-[12px] text-muted">Delete “{project.name}”?</p>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={onDelete}
-                className="w-full rounded-lg px-3 py-2 text-left text-[13px] font-medium text-ink transition-colors duration-150 hover:bg-line/40">
-                Confirm delete
-              </button>
-            </div>
-          )}
-        </div>
+          style={menuPosition}
+          className="fixed z-50 w-52 rounded-lg border border-line/80 bg-paper p-1.5 font-sans shadow-[0_18px_44px_-14px_rgba(38,38,38,0.45)]">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => setMenuState("confirming")}
+            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] font-medium text-ink transition-colors duration-150 hover:bg-line/40">
+            <IconTrash aria-hidden="true" size={15} strokeWidth={1.7} className="shrink-0 text-ink/55" />
+            <span>Delete project</span>
+          </button>
+        </div>,
+        document.body,
       )}
+
+      <AlertDialog
+        isOpen={menuState === "confirming"}
+        onOpenChange={open => {
+          if (!open && !isDeleting) setMenuState("closed");
+        }}
+        title="Delete this project?"
+        description={`“${project.name}” and its entire conversation history will be permanently removed. This action cannot be undone.`}
+        cancelLabel="Cancel"
+        actionLabel="Delete project"
+        actionVariant="destructive"
+        isActionLoading={isDeleting}
+        onAction={async () => {
+          setIsDeleting(true);
+          await onDelete();
+          setIsDeleting(false);
+          setMenuState("closed");
+        }}
+        width={480}
+        className="workspace-delete-dialog"
+      />
     </li>
   );
 }
@@ -321,20 +377,24 @@ export function WorkspaceSidebar({
   }
 
   const visibleProjects = [...(projects ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const closeOnMobile = () => {
+    if (window.matchMedia("(max-width: 767px)").matches) onOpenChange(false);
+  };
 
   return (
     <>
       <aside
-        className={`m-3 flex min-w-0 flex-col gap-5 rounded-[28px] p-4 md:sticky md:top-3 md:h-[calc(100vh-1.5rem)] ${
-          isOpen ? "" : "items-center"
+        className={`fixed bottom-3 left-0 top-3 z-40 ml-3 flex w-[min(18rem,calc(100vw-1.5rem))] min-w-0 flex-col gap-5 rounded-[28px] p-4 transition-transform duration-200 md:sticky md:bottom-auto md:top-3 md:h-[calc(100vh-1.5rem)] md:w-auto ${
+          isOpen ? "translate-x-0" : "-translate-x-[calc(100%+1rem)] md:translate-x-0 md:items-center"
         } ${
           isTranslucent
-            ? "bg-paper/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_24px_48px_-24px_rgba(38,38,38,0.45)] backdrop-blur-2xl backdrop-saturate-150"
+            ? "border border-white/60 bg-paper/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_24px_48px_-24px_rgba(38,38,38,0.3)] backdrop-blur-2xl backdrop-saturate-150"
             : "bg-paper shadow-[0_1px_2px_rgba(38,38,38,0.04),0_24px_48px_-28px_rgba(38,38,38,0.35)]"
         }`}>
         <div className={`flex items-center gap-2 ${isOpen ? "justify-between" : "flex-col"}`}>
           <Link
             href={workspacePath(account.username)}
+            onClick={closeOnMobile}
             aria-label="LotusBuild home"
             className={`flex w-fit items-center ${isOpen ? "" : "hidden"}`}>
             <Image src="/Images/lotusbuild-official.png" alt="LotusBuild" width={120} height={40} className="h-8 w-auto mix-blend-multiply" />
@@ -377,10 +437,11 @@ export function WorkspaceSidebar({
 
         <Link
           href={workspacePath(account.username)}
+          onClick={closeOnMobile}
           aria-label="New project"
           className={
             isOpen
-              ? "flex items-center gap-3 rounded-full bg-line/40 px-4 py-2.5 text-[14px] font-medium text-ink transition-colors duration-200 hover:bg-line/60"
+              ? "flex items-center gap-3 rounded-lg border border-line/70 bg-line/30 px-3.5 py-2.5 text-[14px] font-medium text-ink transition-colors duration-200 hover:bg-line/50"
               : "flex h-9 w-9 items-center justify-center rounded-xl text-ink/60 transition-colors duration-200 hover:bg-line/50 hover:text-ink"
           }>
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
@@ -422,7 +483,7 @@ export function WorkspaceSidebar({
                   {!projectsError && projects !== null && projects.length === 0 && (
                     <p className="px-1 text-[13px] text-ink/60">No projects yet.</p>
                   )}
-                  <ul className="flex flex-col gap-0.5 overflow-y-auto">
+                  <ul className="workspace-project-list flex flex-col gap-0.5 overflow-y-auto">
                     {visibleProjects.map(project => (
                       <ProjectRow
                         key={project.id}
@@ -430,6 +491,7 @@ export function WorkspaceSidebar({
                         href={workspacePath(account.username, project.id)}
                         isActive={project.id === activeProjectId}
                         onDelete={() => handleDelete(project)}
+                        onNavigate={closeOnMobile}
                       />
                     ))}
                   </ul>

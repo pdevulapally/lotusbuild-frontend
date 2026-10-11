@@ -24,6 +24,12 @@ function compile(file) {
   }}).outputText);
   for (const entry of ts.preProcessFile(source, true, true).importedFiles) {
     if (!entry.fileName.startsWith(".")) continue;
+    if (entry.fileName.endsWith(".css")) {
+      const styleStub = join(temporary, relative(root, resolve(dirname(file), entry.fileName)));
+      mkdirSync(dirname(styleStub), {recursive: true});
+      writeFileSync(styleStub, "module.exports = new Proxy({}, {get: (_, key) => String(key)});");
+      continue;
+    }
     const imported = resolve(dirname(file), entry.fileName.replace(/\.js$/, ""));
     let found;
     for (const extension of [".ts", ".tsx"]) {

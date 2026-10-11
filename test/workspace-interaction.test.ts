@@ -19,7 +19,7 @@ test("activity follows true lifecycle, hides settled step-only diagnostics, and 
   assert.doesNotMatch(html(step, "RUNNING", "disconnected"), /shimmer-text/);
   const tool = reduceActivity(step, event("agent.tool_call", {name: "run_command"}));
   assert.match(html(tool, "RUNNING"), /Running command/);
-  assert.match(html(reduceActivity(tool, event("agent.finished")), "IDLE"), /<details/);
+  assert.match(html(reduceActivity(tool, event("agent.finished")), "IDLE"), /Worked/);
   assert.equal(reduceActivity(tool, event("session.running")).entries.length, 0);
 });
 
@@ -77,4 +77,3 @@ test("composer keeps pending progress in its button, preserves a failed draft, a
   await act(async () => root.unmount());
   dom.window.close();
 });
-
