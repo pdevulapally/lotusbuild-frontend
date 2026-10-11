@@ -9,7 +9,7 @@ import {
   type ChatComposerInputHandle,
 } from '@astryxdesign/core/Chat';
 import type {CSSProperties} from 'react';
-import {IconArrowUp, IconLoader2, IconPlayerStop} from '@tabler/icons-react';
+import {IconArrowUp, IconLayoutSidebarRight, IconLoader2, IconPlayerStop} from '@tabler/icons-react';
 
 function modelLabel(model: string): string {
   return model
@@ -149,6 +149,8 @@ type AiInputProps = {
   onSubmit?: (value: string, model: string) => boolean | void | Promise<boolean | void>;
   models?: string[];
   sessionModel?: string;
+  effort?: string;
+  onOpenContext?: () => void;
   compact?: boolean;
   allowUnconfiguredSubmit?: boolean;
   isDisabled?: boolean;
@@ -179,6 +181,8 @@ export function AiInput({
   queuedCount = 0,
   models = [],
   sessionModel,
+  effort,
+  onOpenContext,
   compact = false,
   allowUnconfiguredSubmit = false,
   variant = 'default',
@@ -242,10 +246,19 @@ export function AiInput({
           }}
           style={{minHeight: compact ? 56 : 96, maxHeight: 200, overflowY: 'auto'}} />}
         footerActions={
-          <div className="flex min-w-0 items-center gap-3">
-          {sessionModel ? <span className="truncate px-2 py-1.5 text-[12px] font-medium text-ink/55">{modelLabel(sessionModel)}</span> :
+          <div className="flex min-w-0 items-center gap-1.5">
+          {onOpenContext && <button
+            type="button"
+            onClick={onOpenContext}
+            aria-label="Open conversation context"
+            title="Open context"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink/55 transition-colors hover:bg-line/40 hover:text-ink">
+            <IconLayoutSidebarRight aria-hidden="true" size={16} />
+          </button>}
+          {sessionModel ? <span className="max-w-48 truncate rounded-lg px-2 py-1.5 text-[12px] font-medium text-ink/60" title={sessionModel}>{modelLabel(sessionModel)}</span> :
           models.length > 0 ? <ModelSelect value={model} options={models} onChange={setModel} /> :
           <span className="text-[12px] text-muted">{allowUnconfiguredSubmit ? "Sign in to choose a model" : "Available models could not be loaded."}</span>}
+          {effort && <span className="shrink-0 rounded-lg px-2 py-1.5 text-[12px] capitalize text-ink/45" title="Reasoning effort is set by your plan">{effort} effort</span>}
           {queuedCount > 0 && <span className="shrink-0 text-[12px] text-muted">{queuedCount} queued</span>}
           </div>
         }

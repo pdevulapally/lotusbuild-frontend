@@ -316,6 +316,11 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
           queuedCount={messagesId === selectedId ? queuedMessages.length : 0}
           models={allowedModels(account.me)}
           sessionModel={selected?.model}
+          effort={selected?.effort}
+          onOpenContext={selected ? () => {
+            setRightTab("context");
+            setIsPanelOpen(true);
+          } : undefined}
           isDisabled={sessions === null || Boolean(loadError) || Boolean(selectedId && messagesId !== selectedId) || !account.me.emailVerified || isStopping && active}
           compact
           className={`mx-auto w-full shrink-0 px-4 pb-4 pt-3 transition-[max-width] duration-300 sm:px-6 sm:pb-6 ${
