@@ -83,7 +83,7 @@ export function DesktopViewer({sessionId, revision, ended, disabled, onReady}: {
 
   const unavailable = ended || state === "unavailable";
   return (
-    <div className="relative flex min-h-64 flex-1 flex-col overflow-hidden rounded-3xl bg-paper">
+    <div className="relative flex min-h-64 flex-1 flex-col overflow-hidden rounded-xl border border-line/70 bg-paper shadow-sm">
       <div ref={target} aria-label="Read-only agent desktop" className={`min-h-0 flex-1 ${state === "live" && !ended ? "" : "invisible"}`} />
       {(state !== "live" || ended) && <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
         <p role="status" className="text-[14px] text-muted">{unavailable ? "No desktop is running for this session." : state === "connecting" ? "Connecting to desktop…" : error}</p>

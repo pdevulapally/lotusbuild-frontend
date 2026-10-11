@@ -14,6 +14,16 @@ const TOOL_LABELS: Record<string, string> = {
   read_file: "Reading file", list_files: "Listing files", search_files: "Searching files",
   start_preview: "Starting preview", run_validation: "Running validation",
 };
+const TOOL_RESULTS: Record<string, [string, string]> = {
+  run_command: ["Command completed", "Command failed"],
+  write_file: ["File written", "Could not write file"],
+  edit_file: ["File edited", "Could not edit file"],
+  read_file: ["File read", "Could not read file"],
+  list_files: ["Files listed", "Could not list files"],
+  search_files: ["Search completed", "Search failed"],
+  start_preview: ["Preview started", "Could not start preview"],
+  run_validation: ["Validation passed", "Validation failed"],
+};
 export function toolLabel(name: string): string { return TOOL_LABELS[name] ?? `Using ${name.replace(/[_.-]/g, " ")}`; }
 
 export function reduceActivity(state: Activity, event: SessionEvent): Activity {
@@ -34,7 +44,12 @@ export function reduceActivity(state: Activity, event: SessionEvent): Activity {
         typeof input.path === "string" ? input.path : undefined;
       return {...entry(toolLabel(data.name), false, detail), currentAction: toolLabel(data.name)};
     }
-    case "agent.tool_result": return typeof data.name === "string" && typeof data.isError === "boolean" ? {...entry(`${data.name.replace(/[_.-]/g, " ")}: ${data.isError ? "failed" : "completed"}`, data.isError, typeof data.text === "string" ? data.text : undefined), currentAction: null} : state;
+    case "agent.tool_result": {
+      if (typeof data.name !== "string" || typeof data.isError !== "boolean") return state;
+      const result = TOOL_RESULTS[data.name];
+      const label = result?.[data.isError ? 1 : 0] ?? `${data.name.replace(/[_.-]/g, " ")} ${data.isError ? "failed" : "completed"}`;
+      return {...entry(label, data.isError, typeof data.text === "string" ? data.text : undefined), currentAction: null};
+    }
     case "agent.specialist_started": return typeof data.label === "string" ? entry(`${data.label} started`) : state;
     case "agent.specialist_completed": return typeof data.label === "string" ? entry(`${data.label} completed`) : state;
     case "agent.blocked": return entry("Agent reported a blocker. See its reply.");

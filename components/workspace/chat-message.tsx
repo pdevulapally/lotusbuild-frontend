@@ -10,9 +10,9 @@ export function messageUrl(url: string): string {
   } catch { return url.startsWith("#") ? url : ""; }
 }
 
-export function ChatMessage({content}: {content: string}) {
+export function ChatMessage({content, streaming = false}: {content: string; streaming?: boolean}) {
   return (
-    <div className="chat-message min-w-0 text-ink">
+    <div className={`chat-message min-w-0 text-ink ${streaming ? "chat-message-streaming" : ""}`}>
       <Markdown skipHtml remarkPlugins={[remarkGfm]} urlTransform={messageUrl}
         components={{
           a: ({href, children}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <span>{children}</span>,
@@ -21,6 +21,7 @@ export function ChatMessage({content}: {content: string}) {
         }}>
         {content}
       </Markdown>
+      {streaming && <span aria-hidden="true" className="chat-stream-cursor" />}
     </div>
   );
 }

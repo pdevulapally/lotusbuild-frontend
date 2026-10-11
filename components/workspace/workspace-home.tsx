@@ -2,6 +2,8 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
+import {IconAlertCircle} from "@tabler/icons-react";
+import {useToast} from "@astryxdesign/core/Toast";
 
 import {AiInput} from "@/components/ai-input";
 import {BuildStartError, startBuild} from "@/lib/api/build";
@@ -18,17 +20,35 @@ type ReadyAccount = Extract<WorkspaceAccount, {status: "ready"}>;
 // this just supplies the light-on-photo content.
 export function WorkspaceHome({account}: {account: ReadyAccount}) {
   const router = useRouter();
+  const showToast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
+
+  function showBuildError(message: string, code?: string) {
+    const limitReached = code === "project/limit-reached";
+    showToast({
+      type: "error",
+      isAutoHide: false,
+      uniqueID: "workspace-build-error",
+      body: (
+        <div className="flex items-start gap-3">
+          <IconAlertCircle aria-hidden="true" size={18} strokeWidth={1.8} className="mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold">{limitReached ? "Project limit reached" : "Could not start this project"}</p>
+            <p className="mt-0.5 text-[12px] leading-5 opacity-80">{message}</p>
+            {limitReached && <p className="mt-1 text-[12px] leading-5 opacity-80">Delete an existing project from the sidebar, then try again.</p>}
+          </div>
+        </div>
+      ),
+    });
+  }
 
   async function handleSubmit(prompt: string, model: string) {
     if (!account.me.emailVerified) {
-      setError("Verify your email before starting a build.");
+      showBuildError("Verify your email before starting a build.", "auth/email-not-verified");
       return false;
     }
     setIsSubmitting(true);
-    setError(null);
     setCreatedProjectId(null);
     try {
       const token = await account.user.getIdToken();
@@ -36,7 +56,10 @@ export function WorkspaceHome({account}: {account: ReadyAccount}) {
       router.push(workspacePath(account.username, projectId));
     } catch (failure) {
       if (failure instanceof BuildStartError) setCreatedProjectId(failure.projectId);
-      setError(failure instanceof BuildStartError ? failure.message : failure instanceof ApiError ? failure.message : "Could not confirm the build. Check your projects before trying again.");
+      showBuildError(
+        failure instanceof BuildStartError ? failure.message : failure instanceof ApiError ? failure.message : "Could not confirm the build. Check your projects before trying again.",
+        failure instanceof ApiError ? failure.code : undefined,
+      );
       setIsSubmitting(false);
       return false;
     }
@@ -55,11 +78,6 @@ export function WorkspaceHome({account}: {account: ReadyAccount}) {
           isDisabled={isSubmitting}
           variant="glass"
         />
-        {error && (
-          <p className="text-center text-[13px] font-medium text-paper drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
-            {error}
-          </p>
-        )}
         {createdProjectId && <Link href={workspacePath(account.username, createdProjectId)} className="text-center text-[14px] text-paper underline">Open created project</Link>}
       </div>
     </div>
