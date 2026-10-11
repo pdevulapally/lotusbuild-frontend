@@ -17,13 +17,6 @@ import type {WorkspaceAccount} from "@/lib/workspace/use-account";
 
 type ReadyAccount = Extract<WorkspaceAccount, {status: "ready"}>;
 
-const STATUS_LABEL: Record<Session["status"], string> = {
-  QUEUED: "Queued",
-  RUNNING: "Running",
-  IDLE: "Idle",
-  FAILED: "Failed",
-};
-
 // One project's conversation, plus an optional desktop/context panel toggled
 // on demand (closed by default, for a clean single-column view). Everything
 // here comes from the backend — nothing scripted or placeholder.
@@ -332,7 +325,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
         {!account.me.emailVerified && <p className="px-6 pb-3 text-center text-[13px] text-muted">Verify your email before sending messages.</p>}
       </section>
 
-        <aside className={`${isPanelOpen ? "flex" : "hidden"} fixed inset-x-0 bottom-0 top-14 z-30 min-w-0 flex-col border-t border-line bg-paper md:top-0 xl:static xl:h-dvh xl:min-h-80 xl:border-l xl:border-t-0 xl:bg-line/20`}>
+        <aside className={`${isPanelOpen ? "flex" : "hidden"} fixed inset-x-0 bottom-0 top-14 z-30 min-w-0 flex-col border-t border-line bg-paper font-sans md:top-0 xl:static xl:h-dvh xl:min-h-80 xl:border-l xl:border-t-0 xl:bg-line/20`}>
           <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 text-[13px] sm:px-5">
             <div className="flex h-full items-center gap-5" role="tablist">
               {(["desktop", "context"] as const).map(tab => (
@@ -342,7 +335,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                   role="tab"
                   aria-selected={rightTab === tab}
                   onClick={() => setRightTab(tab)}
-                  className={`relative flex h-full items-center border-b-2 px-0.5 capitalize transition-colors duration-200 ${
+                  className={`relative flex h-full items-center border-b-2 px-0.5 font-sans font-medium capitalize transition-colors duration-200 ${
                     rightTab === tab ? "border-ink text-ink" : "border-transparent text-ink/50 hover:text-ink"
                   }`}>
                   {tab}
@@ -373,9 +366,8 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                 )
             ) : (
               <div className="text-[13px]">
-                <section className="px-5 pb-4 pt-5">
-                  <h2 className="text-[14px] font-medium text-ink">Context</h2>
-                  <p className="mt-1.5 leading-5 text-ink/55">The real conversation and instructions attached to this session.</p>
+                <section className="px-5 py-4">
+                  <p className="leading-5 text-ink/55">Conversation and queued instructions attached to this session.</p>
                 </section>
 
                 <section className="border-t border-line/60 py-4">
@@ -435,31 +427,6 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                   )}
                 </section>
 
-                {selected && (
-                  <section className="border-t border-line/60 px-5 py-5">
-                    <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Run</h3>
-                    <dl className="grid grid-cols-2 gap-x-5 gap-y-3">
-                      <div>
-                        <dt className="text-[11px] text-ink/45">Status</dt>
-                        <dd className="mt-1 flex items-center gap-2 text-ink">
-                          <span className={`size-1.5 rounded-full ${
-                            selected.status === "RUNNING" ? "bg-emerald-500" :
-                            selected.status === "FAILED" ? "bg-accent" : "bg-ink/30"
-                          }`} />
-                          {STATUS_LABEL[selected.status]}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-[11px] text-ink/45">Effort</dt>
-                        <dd className="mt-1 capitalize text-ink">{selected.effort}</dd>
-                      </div>
-                      <div className="col-span-2">
-                        <dt className="text-[11px] text-ink/45">Model</dt>
-                        <dd className="mt-1 truncate text-ink" title={selected.model}>{selected.model}</dd>
-                      </div>
-                    </dl>
-                  </section>
-                )}
               </div>
             )}
           </div>
