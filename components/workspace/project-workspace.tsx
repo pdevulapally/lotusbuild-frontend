@@ -17,6 +17,17 @@ import type {WorkspaceAccount} from "@/lib/workspace/use-account";
 
 type ReadyAccount = Extract<WorkspaceAccount, {status: "ready"}>;
 
+function contextPreview(content: string): string {
+  return content
+    .replace(/```[\s\S]*?```/g, "Code block")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_~#>]/g, "")
+    .replace(/(^|\s)[+-]\s+/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // One project's conversation, plus an optional desktop/context panel toggled
 // on demand (closed by default, for a clean single-column view). Everything
 // here comes from the backend — nothing scripted or placeholder.
@@ -394,8 +405,8 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                               <span className="block text-[11px] font-medium text-ink/45">
                                 {message.role === "user" ? "You" : "LotusBuild"}
                               </span>
-                              <span className="mt-0.5 line-clamp-2 block break-words leading-5 text-ink/80">
-                                {message.content}
+                              <span className="mt-0.5 block max-h-10 overflow-hidden break-words leading-5 text-ink/80">
+                                {contextPreview(message.content)}
                               </span>
                             </span>
                           </button>
