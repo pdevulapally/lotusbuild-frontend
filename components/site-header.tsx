@@ -8,7 +8,6 @@ import {ButtonLink} from "@/components/button-link";
 const sectionLinks = [
   {href: "#workflow", label: "How it works"},
   {href: "#capabilities", label: "Capabilities"},
-  {href: "#faq", label: "FAQ"},
 ];
 
 export function SiteHeader() {
@@ -17,6 +16,7 @@ export function SiteHeader() {
 
   return (
     <header
+      role="banner"
       className="sticky top-0 z-10 px-4 pt-4 sm:px-6"
       onKeyDown={event => {
         if (event.key === "Escape") close();

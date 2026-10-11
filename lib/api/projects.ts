@@ -21,3 +21,14 @@ export async function listProjects(token: string): Promise<Project[]> {
   const {projects} = await apiRequest<{projects: Project[]}>("/projects?limit=100", {token});
   return projects;
 }
+
+// Creates a project. Requires a verified email (requireVerifiedEmail gate) and
+// returns the full created project, same shape as a list item.
+export function createProject(token: string, input: {name: string; description?: string}) {
+  return apiRequest<Project>("/projects", {method: "POST", token, body: input});
+}
+
+// Explicit deletion from the sidebar's project action.
+export function deleteProject(token: string, projectId: string) {
+  return apiRequest<void>(`/projects/${encodeURIComponent(projectId)}`, {method: "DELETE", token});
+}

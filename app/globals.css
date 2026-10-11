@@ -63,6 +63,47 @@ input:focus-visible,
   border-radius: 999px;
 }
 
+.chat-message {
+  overflow-wrap: anywhere;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.chat-message > * + * { margin-top: 1rem; }
+.chat-message p, .chat-message li { font-size: inherit; line-height: inherit; font-family: inherit; }
+.chat-message p { white-space: normal; }
+.chat-message ul > li::marker { font-size: .65em; color: var(--color-muted); }
+.chat-message ol > li::marker { font-size: .9em; color: var(--color-muted); }
+.chat-message strong { font-weight: 600; }
+.chat-message h1, .chat-message h2, .chat-message h3,
+.chat-message h4, .chat-message h5, .chat-message h6 {
+  font-size: 1em;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.chat-message h1 { font-size: 1.12em; }
+.chat-message h2 { font-size: 1.06em; }
+.chat-message ul, .chat-message ol { padding-left: 1.4rem; }
+.chat-message ul { list-style: disc; }
+.chat-message ol { list-style: decimal; }
+.chat-message li { padding-block: 2px; }
+.chat-message li + li { margin-top: 0; }
+.chat-message li > p { margin: .4rem 0; }
+.chat-message a { text-decoration: underline; text-underline-offset: 3px; }
+.chat-message blockquote { border-left: 2px solid var(--color-line); padding-left: 1rem; color: var(--color-muted); }
+.chat-message code { font-size: .85em; background: var(--color-paper); border-radius: 5px; padding: .15rem .35rem; }
+.chat-message pre { max-width: 100%; overflow-x: auto; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-paper); padding: 1rem; }
+.chat-message pre code { padding: 0; white-space: pre; overflow-wrap: normal; }
+.chat-message table { border-collapse: collapse; font-size: .9em; }
+.chat-message th, .chat-message td { border: 1px solid var(--color-line); padding: .5rem .75rem; text-align: left; }
+.chat-message hr { border-color: var(--color-line); margin: 1.5rem 0; }
+
+/* A soft resting/pointer focus edge; keyboard focus keeps the library's ring. */
+.workspace-composer .astryx-chat-composer > div {
+  border-color: var(--color-line);
+}
+
 @keyframes rise {
   from {
     opacity: 0;

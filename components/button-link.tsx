@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 type ButtonLinkProps = {
   href: string;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "inverted";
   children: ReactNode;
 };
 
@@ -14,13 +14,14 @@ const variants = {
   primary:
     "border-ink-strong bg-ink-strong text-paper hover:bg-ink",
   secondary: "border-line bg-transparent text-ink hover:border-ink",
+  inverted: "border-paper bg-paper text-ink-strong hover:bg-line",
 };
 
 export function ButtonLink({ href, variant = "primary", children }: ButtonLinkProps) {
   return (
     <Link href={href} className={`${base} ${variants[variant]}`}>
       {children}
-      {variant === "primary" && (
+      {(variant === "primary" || variant === "inverted") && (
         <svg
           aria-hidden="true"
           width="14"

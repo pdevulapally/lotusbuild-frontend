@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { AiInput } from "@/components/ai-input";
 import { FeatureList } from "@/components/feature-list";
+import { HeroBuildInput } from "@/components/hero-build-input";
 import { Reveal } from "@/components/reveal";
 import { SectionIntro } from "@/components/section-intro";
 import { SiteFooter } from "@/components/site-footer";
@@ -22,34 +22,6 @@ const capabilities = [
   },
 ];
 
-const faqs = [
-  {
-    question: "What can the agent do inside a project?",
-    answer:
-      "The agent works inside its project's isolated sandbox. It can operate on files and run commands there, based on the tasks you give it.",
-  },
-  {
-    question: "Can I edit the files myself?",
-    answer:
-      "Not from this site yet. Changes are made through the agent, so you direct them with instructions in the conversation.",
-  },
-  {
-    question: "Does a finished build go live?",
-    answer:
-      "No. Sandbox previews are temporary and are not permanent deployments.",
-  },
-  {
-    question: "Can I take control of the remote desktop?",
-    answer:
-      "No. Remote desktop viewing is read-only, and it is only available where it has been enabled.",
-  },
-  {
-    question: "Can I stop an agent that is working?",
-    answer:
-      "Yes. You can cancel a run while the agent is working.",
-  },
-];
-
 const sectionClass = "mx-auto flex max-w-6xl flex-col items-center px-4 py-24 text-center sm:px-6 sm:py-32";
 
 export default function Home() {
@@ -61,29 +33,35 @@ export default function Home() {
       >
         Skip to content
       </a>
-      <SiteHeader />
-
       <main id="main" className="flex-1">
-        <section aria-labelledby="hero-title" className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-16 pt-20 text-center sm:px-6 sm:pt-32">
-          <h1
-            id="hero-title"
-            className="hero-rise mt-8 font-display text-[clamp(2.25rem,5vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.02em] sm:whitespace-nowrap [animation-delay:120ms]"
+        <div className="relative isolate">
+          <Image
+            src="/Images/Canvas Sunrise Retreat by the Lake.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-black/35" />
+
+          <SiteHeader />
+
+          <section
+            aria-labelledby="hero-title"
+            className="relative mx-auto flex min-h-[560px] max-w-6xl flex-col items-center justify-center px-4 pb-20 pt-16 text-center sm:min-h-[640px] sm:px-6"
           >
-            Hey, what would you like to build today?
-          </h1>
-          <div className="hero-rise mt-12 w-full max-w-2xl [animation-delay:360ms]">
-            <AiInput
-              label="Describe a project to build"
-              attachments={[
-                "project_brief.pdf",
-                "wireframes_v2.fig",
-                "api_spec.yaml",
-                "user_research.csv",
-                "brand_guidelines.pdf",
-              ]}
-            />
-          </div>
-        </section>
+            <h1
+              id="hero-title"
+              className="hero-rise font-display text-[clamp(2.25rem,5vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.02em] text-paper drop-shadow-[0_6px_28px_rgba(20,16,12,0.5)] [animation-delay:120ms] sm:whitespace-nowrap"
+            >
+              Hey, what would you like to build today?
+            </h1>
+            <div className="hero-rise mt-12 w-full max-w-2xl [animation-delay:360ms]">
+              <HeroBuildInput />
+            </div>
+          </section>
+        </div>
 
         <section id="workflow" aria-labelledby="workflow-title" className={sectionClass}>
           <Reveal>
@@ -93,8 +71,19 @@ export default function Home() {
               title="From a task to a running build, in four steps."
             />
           </Reveal>
-          <Reveal>
-            <WorkflowDemo />
+          <Reveal className="w-full">
+            <div className="relative isolate mt-16 w-full overflow-hidden rounded-[32px] px-4 py-16 sm:px-10 sm:py-20">
+              <Image
+                src="/Images/Misty Mountain Loch at Sunrise.png"
+                alt=""
+                fill
+                sizes="(min-width: 1152px) 1152px, 100vw"
+                className="object-cover object-center"
+              />
+              <div className="relative">
+                <WorkflowDemo />
+              </div>
+            </div>
           </Reveal>
         </section>
 
@@ -106,40 +95,20 @@ export default function Home() {
               title="Organize the work, follow the agent, keep control."
             />
           </Reveal>
-          <Reveal>
-            <div className="mt-20 w-full">
-              <FeatureList items={capabilities} />
+          <Reveal className="w-full">
+            <div className="relative isolate mt-20 w-full overflow-hidden rounded-[32px] px-4 py-16 sm:px-10 sm:py-20">
+              <Image
+                src="/Images/Misty Mountain Loch at Sunrise.png"
+                alt=""
+                fill
+                sizes="(min-width: 1152px) 1152px, 100vw"
+                className="object-cover object-center"
+              />
+              <div className="relative">
+                <FeatureList items={capabilities} />
+              </div>
             </div>
           </Reveal>
-        </section>
-
-        <section id="faq" aria-labelledby="faq-title" className={sectionClass}>
-          <Reveal>
-            <SectionIntro titleId="faq-title" eyebrow="FAQ" title="Questions, answered." />
-          </Reveal>
-          <ul className="mt-14 w-full max-w-3xl divide-y-2 divide-ink border-y-2 border-ink text-left">
-            {faqs.map((faq) => (
-              <Reveal key={faq.question}>
-                <li>
-                  <details className="group py-6">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-left [&::-webkit-details-marker]:hidden">
-                      <span className="font-display text-2xl font-bold leading-tight tracking-[-0.02em] sm:text-3xl">
-                        {faq.question}
-                      </span>
-                      <span
-                        aria-hidden="true"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-ink transition-transform duration-300 group-open:rotate-45">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                          <path d="M9 3v12M3 9h12" />
-                        </svg>
-                      </span>
-                    </summary>
-                    <p className="mt-4 max-w-2xl text-[16px] leading-7 text-muted">{faq.answer}</p>
-                  </details>
-                </li>
-              </Reveal>
-            ))}
-          </ul>
         </section>
 
         <section id="get-started" aria-labelledby="get-started-title" className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-32">

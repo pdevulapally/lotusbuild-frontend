@@ -1,0 +1,49 @@
+import type {SessionEvent} from "../api/session-events";
+
+export type Activity = {
+  text: string;
+  phase: "waiting" | "working" | "finished" | "cancel" | "failed";
+  entries: {id: string; label: string; failed: boolean; detail?: string}[];
+  save: "unknown" | "saved" | "failed";
+  currentAction: string | null;
+};
+export const initialActivity: Activity = {text: "", phase: "waiting", entries: [], save: "unknown", currentAction: null};
+
+const TOOL_LABELS: Record<string, string> = {
+  run_command: "Running command", write_file: "Writing file", edit_file: "Editing file",
+  read_file: "Reading file", list_files: "Listing files", search_files: "Searching files",
+  start_preview: "Starting preview", run_validation: "Running validation",
+};
+export function toolLabel(name: string): string { return TOOL_LABELS[name] ?? `Using ${name.replace(/[_.-]/g, " ")}`; }
+
+export function reduceActivity(state: Activity, event: SessionEvent): Activity {
+  const {type, data, id} = event;
+  const entry = (label: string, failed = false, detail?: string): Activity => ({
+    ...state, entries: [...state.entries, {id, label, failed, ...(detail ? {detail: detail.slice(0, 4000)} : {})}].slice(-80),
+  });
+  switch (type) {
+    case "session.running": return {...state, text: "", entries: [], phase: "working", save: "unknown", currentAction: null};
+    case "session.queued": return {...state, text: "", entries: [], phase: "waiting", save: "unknown", currentAction: null};
+    case "agent.text": return typeof data.delta === "string" ? {...state, text: (state.text + data.delta).slice(-200_000)} : state;
+    case "agent.step": return Number.isInteger(data.number) ? entry(`Step ${data.number}`) : state;
+    case "agent.tool_call": {
+      if (typeof data.name !== "string") return state;
+      const input = data.input && typeof data.input === "object" ? data.input as Record<string, unknown> : {};
+      // Display only documented command/path fields, never arbitrary input objects.
+      const detail = data.name === "run_command" && typeof input.command === "string" ? input.command :
+        typeof input.path === "string" ? input.path : undefined;
+      return {...entry(toolLabel(data.name), false, detail), currentAction: toolLabel(data.name)};
+    }
+    case "agent.tool_result": return typeof data.name === "string" && typeof data.isError === "boolean" ? {...entry(`${data.name.replace(/[_.-]/g, " ")}: ${data.isError ? "failed" : "completed"}`, data.isError, typeof data.text === "string" ? data.text : undefined), currentAction: null} : state;
+    case "agent.specialist_started": return typeof data.label === "string" ? entry(`${data.label} started`) : state;
+    case "agent.specialist_completed": return typeof data.label === "string" ? entry(`${data.label} completed`) : state;
+    case "agent.blocked": return entry("Agent reported a blocker. See its reply.");
+    case "agent.finished":
+    case "session.idle": return {...state, phase: "finished", text: "", currentAction: null};
+    case "session.cancel_requested": return {...state, phase: "cancel"};
+    case "session.failed": return {...state, phase: "failed", text: "", currentAction: null};
+    case "project.saved": return {...state, save: "saved"};
+    case "project.save_failed": return {...state, save: "failed"};
+    default: return state;
+  }
+}

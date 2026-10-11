@@ -29,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      data-theme="light"
       className={`${publicSans.variable} ${libreCaslon.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

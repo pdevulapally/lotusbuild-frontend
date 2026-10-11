@@ -20,7 +20,7 @@ export type ApiRequestInit = Omit<RequestInit, "body"> & {
   token?: string;
 };
 
-function baseUrl(): string {
+export function baseUrl(): string {
   const value = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!value) throw new Error("NEXT_PUBLIC_API_BASE_URL is not set");
   return value.replace(/\/$/, "");
@@ -59,7 +59,9 @@ async function send<T>(path: string, init: ApiRequestInit): Promise<T> {
     const problem = (await response.json().catch(() => ({}))) as {code?: string; message?: string};
     throw new ApiError(response.status, problem.code, problem.message ?? `Request failed with ${response.status}`);
   }
-  return (await response.json()) as T;
+  if (response.status === 204) return undefined as T;
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 // Only reads are retried, and only on server errors or network failures. A write

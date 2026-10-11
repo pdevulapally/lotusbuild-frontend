@@ -6,5 +6,9 @@ import {Theme} from '@astryxdesign/core/theme';
 import {lotusTheme} from '@/components/lotus-theme';
 
 export function Providers({children}: {children: ReactNode}) {
-  return <Theme theme={lotusTheme}>{children}</Theme>;
+  return (
+    <Theme theme={lotusTheme} mode="light">
+      {children}
+    </Theme>
+  );
 }

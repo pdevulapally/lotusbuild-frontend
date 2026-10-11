@@ -3,17 +3,13 @@
 import {useRef, useState, useSyncExternalStore} from 'react';
 import {
   ChatComposer,
-  ChatComposerDrawer,
   ChatComposerInput,
   ChatDictationButton,
   useChatDictation,
   type ChatComposerInputHandle,
 } from '@astryxdesign/core/Chat';
-import {Token} from '@astryxdesign/core/Token';
 import type {CSSProperties} from 'react';
-
-// Model IDs from the backend's ai.model.allowlist.
-const AGENT_MODELS = ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-5'];
+import {IconArrowUp, IconLoader2, IconPlayerStop} from '@tabler/icons-react';
 
 // Agent model picker: pill trigger with a floating, check-marked menu.
 function ModelSelect({
@@ -105,37 +101,93 @@ function ModelSelect({
 
 // LotusBuild palette (matches app/globals.css) applied to the composer's tokens.
 const composerTheme = {
+  '--color-background-popover': '#f7f5f3',
   '--color-background-surface': '#f7f5f3',
   '--color-background-card': '#f7f5f3',
   '--color-background-muted': '#efebe7',
   '--color-border': '#d6d0ca',
-  '--color-border-emphasized': '#262626',
+  '--color-border-emphasized': '#d6d0ca',
   '--color-text-primary': '#262626',
   '--color-text-secondary': '#5c5854',
   '--color-accent': '#262626',
+  '--_chat-composer-radius': '24px',
+} as CSSProperties;
+
+// Same palette, translucent — for placing the composer over a photo (its
+// backdrop-blur needs a see-through background to actually blur anything).
+const glassTheme = {
+  ...composerTheme,
+  '--color-background-popover': 'rgba(247, 245, 243, 0.55)',
+  '--color-background-surface': 'rgba(247, 245, 243, 0.55)',
+  '--color-background-card': 'rgba(247, 245, 243, 0.55)',
+  '--color-background-muted': 'rgba(239, 235, 231, 0.55)',
+  '--color-border-emphasized': 'rgba(255, 255, 255, 0.4)',
 } as CSSProperties;
 
 type AiInputProps = {
   label: string;
   placeholder?: string;
-  attachments?: string[];
-  onSubmit?: (value: string) => void;
+  onSubmit?: (value: string, model: string) => boolean | void | Promise<boolean | void>;
+  models?: string[];
+  sessionModel?: string;
+  compact?: boolean;
+  allowUnconfiguredSubmit?: boolean;
+  isDisabled?: boolean;
+  isWorking?: boolean;
+  isStopping?: boolean;
+  onStop?: () => void;
+  announcement?: string | null;
+  error?: string | null;
+  queuedCount?: number;
+  /** "glass" is for placing the composer directly over a photo (e.g. a
+   * workspace home screen's background); everywhere else stays opaque. */
+  variant?: 'default' | 'glass';
   className?: string;
 };
 
-// Composer with an attachment tray, text input, and voice input.
-// Mode, reference, and settings controls are intentionally not included.
+// Composer with a text input and voice input.
+// Mode, reference, attachments, and settings controls are intentionally not included.
 export function AiInput({
   label,
   placeholder = 'Ask anything',
-  attachments = [],
   onSubmit,
+  isDisabled = false,
+  isWorking = false,
+  isStopping = false,
+  onStop,
+  announcement,
+  error,
+  queuedCount = 0,
+  models = [],
+  sessionModel,
+  compact = false,
+  allowUnconfiguredSubmit = false,
+  variant = 'default',
   className = '',
 }: AiInputProps) {
   const [value, setValue] = useState('');
   const inputRef = useRef<ChatComposerInputHandle>(null);
   const dictation = useChatDictation({inputRef});
-  const [model, setModel] = useState(AGENT_MODELS[1]);
+  const [chosenModel, setModel] = useState('');
+  const model = sessionModel ?? (models.includes(chosenModel) ? chosenModel : models[0] ?? '');
+  const submitting = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  async function submit(text: string) {
+    if (submitting.current || !onSubmit || !model && !allowUnconfiguredSubmit) return;
+    submitting.current = true;
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      if (await onSubmit(text, model) !== false) setValue('');
+    } catch {
+      setSubmitError('Could not confirm delivery. Check the conversation before sending again.');
+    } finally {
+      submitting.current = false;
+      setIsSubmitting(false);
+    }
+  }
   // Voice support is only known in the browser, so the mic renders after mount
   // to keep the server and client HTML identical.
   const isMounted = useSyncExternalStore(
@@ -144,33 +196,56 @@ export function AiInput({
     () => false,
   );
 
+  const isGlass = variant === 'glass';
+  const disabled = isDisabled || isSubmitting || !onSubmit || !model && !allowUnconfiguredSubmit;
+
   return (
-    <div className={`w-full text-left ${className}`} style={composerTheme}>
+    <div
+      className={`workspace-composer w-full text-left ${isGlass ? 'backdrop-blur-2xl backdrop-saturate-150' : ''} ${className}`}
+      style={isGlass ? glassTheme : composerTheme}>
       <ChatComposer
-        density="spacious"
+        density={compact ? "balanced" : "spacious"}
+        elevation="none"
         aria-label={label}
         value={value}
-        onChange={setValue}
-        onSubmit={text => {
-          onSubmit?.(text);
-          setValue('');
-        }}
+        onChange={text => { if (!submitting.current) setValue(text); }}
+        isDisabled={disabled}
+        onSubmit={text => { void submit(text); }}
         placeholder={placeholder}
-        drawer={
-          attachments.length > 0 ? (
-            <ChatComposerDrawer count={attachments.length}>
-              {attachments.map(name => (
-                <Token key={name} label={name} />
-              ))}
-            </ChatComposerDrawer>
-          ) : undefined
-        }
-        input={<ChatComposerInput handleRef={inputRef} style={{minHeight: 96}} />}
+        input={<ChatComposerInput handleRef={inputRef}
+          onKeyDown={event => {
+            if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+            // The library clears its editable DOM synchronously on Enter.
+            // Own this path so a rejected/uncertain write preserves the draft.
+            event.preventDefault();
+            if (isDisabled || isSubmitting || !value.trim()) return;
+            void submit(value.trim());
+          }}
+          style={{minHeight: compact ? 56 : 96, maxHeight: 200, overflowY: 'auto'}} />}
         footerActions={
-          <ModelSelect value={model} options={AGENT_MODELS} onChange={setModel} />
+          <div className="flex min-w-0 items-center gap-3">
+          {sessionModel ? <span className="truncate px-1 text-[12px] text-muted">{sessionModel}</span> :
+          models.length > 0 ? <ModelSelect value={model} options={models} onChange={setModel} /> :
+          <span className="text-[12px] text-muted">{allowUnconfiguredSubmit ? "Sign in to choose a model" : "Available models could not be loaded."}</span>}
+          {queuedCount > 0 && <span className="shrink-0 text-[12px] text-muted">{queuedCount} queued</span>}
+          </div>
         }
-        sendActions={isMounted ? <ChatDictationButton dictation={dictation} /> : null}
+        sendActions={<>
+          {isMounted && !disabled ? <ChatDictationButton dictation={dictation} /> : null}
+          {isWorking && onStop && <button type="button" onClick={onStop} disabled={isStopping}
+            aria-label={isStopping ? 'Stopping agent' : 'Stop agent'} title={isStopping ? 'Stopping…' : 'Stop agent'}
+            className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-line/40 disabled:opacity-50">
+            <IconPlayerStop aria-hidden="true" size={16} />
+          </button>}
+        </>}
+        sendButton={<button type="button" onClick={() => { void submit(value.trim()); }}
+          disabled={disabled || !value.trim()} aria-label={isSubmitting ? 'Sending message' : isWorking ? 'Queue follow-up' : 'Send'}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ink text-paper transition-opacity disabled:opacity-35">
+          {isSubmitting ? <IconLoader2 aria-hidden="true" size={17} className="animate-spin motion-reduce:animate-none" /> : <IconArrowUp aria-hidden="true" size={17} />}
+        </button>}
       />
+      <span role="status" aria-live="polite" className="sr-only">{isSubmitting ? 'Sending message' : announcement}</span>
+      {(error || submitError) && <p role="alert" className="mt-2 text-[13px] leading-5 text-accent">{error || submitError}</p>}
     </div>
   );
 }

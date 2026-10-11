@@ -1,7 +1,8 @@
 "use client";
 
-import {useState, type FormEvent} from "react";
+import {useEffect, useState, type FormEvent} from "react";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 
 import {
   AuthError,
@@ -12,20 +13,43 @@ import {
   GoogleButton,
   OrDivider,
 } from "@/components/auth/auth-shell";
-import {authErrorMessage, signInWithGoogle, signUpWithEmail} from "@/lib/firebase/auth-actions";
+import {
+  authErrorMessage,
+  completeGoogleRedirect,
+  signInWithGoogle,
+  signUpWithEmail,
+} from "@/lib/firebase/auth-actions";
+import {useWorkspaceAccount} from "@/lib/workspace/use-account";
+import {workspacePath} from "@/lib/workspace/slug";
 
 const PASSWORD_MISMATCH = "The passwords do not match.";
 
 export default function SignUpPage() {
+  const router = useRouter();
+  const account = useWorkspaceAccount();
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+
+  // Continuing with Google signs straight in (no email link to wait for): go
+  // to the workspace as soon as that account is ready.
+  useEffect(() => {
+    if (account.status === "ready") router.replace(workspacePath(account.username));
+  }, [account, router]);
+
+  // Picks up an error from a Google redirect this page may have just been sent back from.
+  useEffect(() => {
+    completeGoogleRedirect().then(message => {
+      if (message) setError(message);
+    });
+  }, []);
 
   async function handleSignUp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email"));
     const password = String(form.get("password"));
+    const displayName = String(form.get("name")).trim();
 
     if (password !== String(form.get("confirmPassword"))) {
       setError(PASSWORD_MISMATCH);
@@ -35,7 +59,7 @@ export default function SignUpPage() {
     setIsBusy(true);
     setError(null);
     try {
-      await signUpWithEmail(email, password);
+      await signUpWithEmail(email, password, displayName);
       setSentTo(email);
     } catch (failure) {
       setError(authErrorMessage(failure));
@@ -73,6 +97,7 @@ export default function SignUpPage() {
   return (
     <AuthShell title="Create an account">
       <form onSubmit={handleSignUp} className="flex flex-col gap-3">
+        <input name="name" type="text" autoComplete="name" placeholder="Name" required className={authInputClass} />
         <input name="email" type="email" autoComplete="email" placeholder="Email" required className={authInputClass} />
         <input
           name="password"
