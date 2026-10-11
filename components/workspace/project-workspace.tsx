@@ -45,6 +45,8 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const [viewerEnabled, setViewerEnabled] = useState(true);
   const [desktop, setDesktop] = useState<{sessionId: string; ended: boolean; revision: number} | null>(null);
   const [showJump, setShowJump] = useState(false);
+  const [chatScrollable, setChatScrollable] = useState(false);
+  const [scrollSegment, setScrollSegment] = useState(2);
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const pinnedToBottom = useRef(true);
@@ -57,6 +59,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const latestUserIndex = visibleMessages.findLastIndex(message => message.role === "user");
   const history = latestUserIndex < 0 ? visibleMessages : visibleMessages.slice(0, latestUserIndex);
   const latestTurn = latestUserIndex < 0 ? [] : visibleMessages.slice(latestUserIndex);
+  const currentTask = latestUserIndex < 0 ? null : visibleMessages[latestUserIndex]?.content;
   const renderMessage = (message: Message) => message.role === "user" ? (
     <div key={message.seq} className="flex justify-end">
       <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-[18px] bg-line/55 px-4 py-2.5 text-[14px] leading-6 text-ink">{message.content}</p>
@@ -68,6 +71,13 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   // tail of a live response never ends up sitting right at the composer's
   // edge. Only snaps down when already near the bottom, so scrolling up to
   // read earlier history is never hijacked mid-stream.
+  const syncScrollPosition = useCallback((element: HTMLDivElement) => {
+    const maximum = Math.max(0, element.scrollHeight - element.clientHeight);
+    setChatScrollable(maximum > 48);
+    const progress = maximum === 0 ? 1 : element.scrollTop / maximum;
+    setScrollSegment(progress < 0.34 ? 0 : progress < 0.72 ? 1 : 2);
+  }, []);
+
   useEffect(() => {
     const scrollEl = scrollRef.current;
     const contentEl = contentRef.current;
@@ -76,10 +86,11 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
       if (pinnedToBottom.current) {
         scrollEl.scrollTop = scrollEl.scrollHeight;
       }
+      syncScrollPosition(scrollEl);
     });
     observer.observe(contentEl);
     return () => observer.disconnect();
-  }, []);
+  }, [syncScrollPosition]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -241,7 +252,12 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
         )}
 
         <div className="relative min-h-0 flex-1">
-        <div ref={scrollRef} onScroll={event => { const element = event.currentTarget; pinnedToBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100; setShowJump(!pinnedToBottom.current); }} className="chat-scroll flex h-full min-h-0 justify-center overflow-y-auto px-5 py-8 sm:px-8">
+        <div ref={scrollRef} onScroll={event => {
+          const element = event.currentTarget;
+          pinnedToBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+          setShowJump(!pinnedToBottom.current);
+          syncScrollPosition(element);
+        }} className="chat-scroll flex h-full min-h-0 justify-center overflow-y-auto px-5 py-8 sm:px-8">
           <div ref={contentRef} className={`flex w-full flex-col gap-10 pb-4 transition-[max-width] duration-300 ${
             isPanelOpen ? "max-w-[42rem]" : "max-w-[50rem]"
           }`}>
@@ -265,6 +281,29 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
             ))}
           </div>
         </div>
+        {chatScrollable && (
+          <div aria-label="Conversation position" className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 flex-col">
+            {(["Beginning", "Middle", "Latest"] as const).map((label, index) => (
+              <button
+                key={label}
+                type="button"
+                aria-label={`Scroll to ${label.toLowerCase()} of conversation`}
+                aria-current={scrollSegment === index ? "location" : undefined}
+                onClick={() => {
+                  const element = scrollRef.current;
+                  if (!element) return;
+                  const maximum = Math.max(0, element.scrollHeight - element.clientHeight);
+                  pinnedToBottom.current = index === 2;
+                  element.scrollTo({top: maximum * (index / 2), behavior: "smooth"});
+                }}
+                className="group flex h-4 w-7 items-center justify-end">
+                <span className={`h-0.5 rounded-full transition-all duration-200 ${
+                  scrollSegment === index ? "w-5 bg-[#5178ef]" : "w-3 bg-line group-hover:w-4 group-hover:bg-ink/25"
+                }`} />
+              </button>
+            ))}
+          </div>
+        )}
         {showJump && <button type="button" aria-label="Jump to latest message" onClick={() => { pinnedToBottom.current = true; setShowJump(false); scrollRef.current?.scrollTo({top: scrollRef.current.scrollHeight, behavior: "instant"}); }} className="absolute bottom-3 left-1/2 flex size-8 -translate-x-1/2 items-center justify-center rounded-full border border-line bg-paper text-muted shadow-sm"><IconArrowDown aria-hidden="true" size={16} /></button>}
         </div>
         <AiInput
@@ -331,28 +370,15 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
             ) : (
               <div className="text-[13px]">
                 <section className="px-5 py-5">
-                  <h2 className="text-[14px] font-medium text-ink">Project context</h2>
-                  <p className="mt-1.5 max-w-prose leading-5 text-ink/55">
-                    {project.description || project.name}
-                  </p>
+                  <h2 className="text-[14px] font-medium text-ink">Conversation context</h2>
+                  <p className="mt-1.5 leading-5 text-ink/55">Information currently available to this session.</p>
                 </section>
 
                 <section className="border-t border-line/60 px-5 py-5">
-                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Project</h3>
-                  <dl className="space-y-3">
-                    <div className="flex items-center justify-between gap-5">
-                      <dt className="text-ink/55">Platform</dt>
-                      <dd className="capitalize text-ink">{project.platform}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-5">
-                      <dt className="text-ink/55">Status</dt>
-                      <dd className="capitalize text-ink">{project.status}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-5">
-                      <dt className="text-ink/55">Created</dt>
-                      <dd className="text-ink">{new Date(project.createdAt).toLocaleDateString()}</dd>
-                    </div>
-                  </dl>
+                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Current task</h3>
+                  <p className="whitespace-pre-wrap break-words leading-5 text-ink">
+                    {currentTask ?? "No task has been sent in this conversation."}
+                  </p>
                 </section>
 
                 {selected && (
@@ -381,15 +407,21 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                         <dt className="text-ink/55">Messages</dt>
                         <dd className="text-ink">{selected.messageCount}</dd>
                       </div>
-                      <div className="flex items-start justify-between gap-5">
-                        <dt className="text-ink/55">Sandbox</dt>
-                        <dd className="max-w-[65%] truncate font-mono text-[12px] text-ink" title={selected.sandboxId ?? undefined}>
-                          {selected.sandboxId ?? "Not started"}
-                        </dd>
-                      </div>
                     </dl>
                   </section>
                 )}
+                <section className="border-t border-line/60 px-5 py-5">
+                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Queued follow-ups</h3>
+                  {queuedMessages.length > 0 ? (
+                    <ol className="space-y-3">
+                      {queuedMessages.map(message => (
+                        <li key={message.id} className="whitespace-pre-wrap break-words leading-5 text-ink">{message.prompt}</li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="text-ink/55">No follow-ups are queued.</p>
+                  )}
+                </section>
               </div>
             )}
           </div>

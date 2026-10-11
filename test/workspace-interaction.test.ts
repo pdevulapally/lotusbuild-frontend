@@ -12,7 +12,7 @@ const event = (type: string, data: Record<string, unknown> = {}) => ({id: "1-0",
 test("activity follows true lifecycle, hides settled step-only diagnostics, and exposes useful tool detail", () => {
   const step = reduceActivity(initialActivity, event("agent.step", {number: 1}));
   const finished = reduceActivity(step, event("agent.finished"));
-  const html = (state: typeof initialActivity, status: "RUNNING" | "IDLE", connection: "connected" | "disconnected" = "connected") => renderToStaticMarkup(createElement(ActivityView, {state, status, connection, onReconnect() {}}));
+  const html = (state: typeof initialActivity, status: "RUNNING" | "IDLE" | "FAILED", connection: "connected" | "disconnected" = "connected") => renderToStaticMarkup(createElement(ActivityView, {state, status, connection, onReconnect() {}}));
   assert.doesNotMatch(html(finished, "IDLE"), /Finished|Step 1|Save not confirmed/);
   assert.match(html(step, "RUNNING"), /Thinking…/);
   assert.match(html(step, "RUNNING", "disconnected"), /Activity disconnected/);
@@ -20,6 +20,7 @@ test("activity follows true lifecycle, hides settled step-only diagnostics, and 
   const tool = reduceActivity(step, event("agent.tool_call", {name: "run_command"}));
   assert.match(html(tool, "RUNNING"), /Running command/);
   assert.match(html(reduceActivity(tool, event("agent.finished")), "IDLE"), /Worked/);
+  assert.match(html(reduceActivity(tool, event("session.failed")), "FAILED"), /Session failed/);
   assert.equal(reduceActivity(tool, event("session.running")).entries.length, 0);
 });
 
