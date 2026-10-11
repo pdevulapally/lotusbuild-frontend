@@ -17,12 +17,16 @@ import type {WorkspaceAccount} from "@/lib/workspace/use-account";
 
 type ReadyAccount = Extract<WorkspaceAccount, {status: "ready"}>;
 
-const STATUS_LABEL: Record<Session["status"], string> = {
-  QUEUED: "Queued",
-  RUNNING: "Running",
-  IDLE: "Idle",
-  FAILED: "Failed",
-};
+function contextPreview(content: string): string {
+  return content
+    .replace(/```[\s\S]*?```/g, "Code block")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_~#>]/g, "")
+    .replace(/(^|\s)[+-]\s+/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 // One project's conversation, plus an optional desktop/context panel toggled
 // on demand (closed by default, for a clean single-column view). Everything
@@ -45,6 +49,8 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const [viewerEnabled, setViewerEnabled] = useState(true);
   const [desktop, setDesktop] = useState<{sessionId: string; ended: boolean; revision: number} | null>(null);
   const [showJump, setShowJump] = useState(false);
+  const [chatScrollable, setChatScrollable] = useState(false);
+  const [scrollSegment, setScrollSegment] = useState(2);
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const pinnedToBottom = useRef(true);
@@ -57,17 +63,29 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const latestUserIndex = visibleMessages.findLastIndex(message => message.role === "user");
   const history = latestUserIndex < 0 ? visibleMessages : visibleMessages.slice(0, latestUserIndex);
   const latestTurn = latestUserIndex < 0 ? [] : visibleMessages.slice(latestUserIndex);
-  const renderMessage = (message: Message) => message.role === "user" ? (
-    <div key={message.seq} className="flex justify-end">
-      <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-[18px] bg-line/55 px-4 py-2.5 text-[14px] leading-6 text-ink">{message.content}</p>
+  const contextMessages = visibleMessages.slice(-10);
+  const renderMessage = (message: Message) => (
+    <div key={message.seq} data-message-seq={message.seq}>
+      {message.role === "user" ? (
+        <div className="flex justify-end">
+          <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-[18px] bg-line/55 px-4 py-2.5 text-[14px] leading-6 text-ink">{message.content}</p>
+        </div>
+      ) : <ChatMessage content={message.content} />}
     </div>
-  ) : <ChatMessage key={message.seq} content={message.content} />;
+  );
 
   // Keeps the view pinned to the newest content — new messages and, just as
   // important, a reply growing token-by-token while it streams in — so the
   // tail of a live response never ends up sitting right at the composer's
   // edge. Only snaps down when already near the bottom, so scrolling up to
   // read earlier history is never hijacked mid-stream.
+  const syncScrollPosition = useCallback((element: HTMLDivElement) => {
+    const maximum = Math.max(0, element.scrollHeight - element.clientHeight);
+    setChatScrollable(maximum > 48);
+    const progress = maximum === 0 ? 1 : element.scrollTop / maximum;
+    setScrollSegment(progress < 0.34 ? 0 : progress < 0.72 ? 1 : 2);
+  }, []);
+
   useEffect(() => {
     const scrollEl = scrollRef.current;
     const contentEl = contentRef.current;
@@ -76,10 +94,11 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
       if (pinnedToBottom.current) {
         scrollEl.scrollTop = scrollEl.scrollHeight;
       }
+      syncScrollPosition(scrollEl);
     });
     observer.observe(contentEl);
     return () => observer.disconnect();
-  }, []);
+  }, [syncScrollPosition]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -241,7 +260,12 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
         )}
 
         <div className="relative min-h-0 flex-1">
-        <div ref={scrollRef} onScroll={event => { const element = event.currentTarget; pinnedToBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100; setShowJump(!pinnedToBottom.current); }} className="chat-scroll flex h-full min-h-0 justify-center overflow-y-auto px-5 py-8 sm:px-8">
+        <div ref={scrollRef} onScroll={event => {
+          const element = event.currentTarget;
+          pinnedToBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+          setShowJump(!pinnedToBottom.current);
+          syncScrollPosition(element);
+        }} className="chat-scroll flex h-full min-h-0 justify-center overflow-y-auto px-5 py-8 sm:px-8">
           <div ref={contentRef} className={`flex w-full flex-col gap-10 pb-4 transition-[max-width] duration-300 ${
             isPanelOpen ? "max-w-[42rem]" : "max-w-[50rem]"
           }`}>
@@ -265,6 +289,29 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
             ))}
           </div>
         </div>
+        {chatScrollable && (
+          <div aria-label="Conversation position" className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 flex-col">
+            {(["Beginning", "Middle", "Latest"] as const).map((label, index) => (
+              <button
+                key={label}
+                type="button"
+                aria-label={`Scroll to ${label.toLowerCase()} of conversation`}
+                aria-current={scrollSegment === index ? "location" : undefined}
+                onClick={() => {
+                  const element = scrollRef.current;
+                  if (!element) return;
+                  const maximum = Math.max(0, element.scrollHeight - element.clientHeight);
+                  pinnedToBottom.current = index === 2;
+                  element.scrollTo({top: maximum * (index / 2), behavior: "smooth"});
+                }}
+                className="group flex h-4 w-7 items-center justify-end">
+                <span className={`h-0.5 rounded-full transition-all duration-200 ${
+                  scrollSegment === index ? "w-5 bg-[#5178ef]" : "w-3 bg-line group-hover:w-4 group-hover:bg-ink/25"
+                }`} />
+              </button>
+            ))}
+          </div>
+        )}
         {showJump && <button type="button" aria-label="Jump to latest message" onClick={() => { pinnedToBottom.current = true; setShowJump(false); scrollRef.current?.scrollTo({top: scrollRef.current.scrollHeight, behavior: "instant"}); }} className="absolute bottom-3 left-1/2 flex size-8 -translate-x-1/2 items-center justify-center rounded-full border border-line bg-paper text-muted shadow-sm"><IconArrowDown aria-hidden="true" size={16} /></button>}
         </div>
         <AiInput
@@ -276,10 +323,11 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
           isStopping={isStopping}
           onStop={handleStop}
           announcement={acceptance}
-          error={sendError ?? selected?.error}
+          error={sendError}
           queuedCount={messagesId === selectedId ? queuedMessages.length : 0}
           models={allowedModels(account.me)}
           sessionModel={selected?.model}
+          effort={selected?.effort}
           isDisabled={sessions === null || Boolean(loadError) || Boolean(selectedId && messagesId !== selectedId) || !account.me.emailVerified || isStopping && active}
           compact
           className={`mx-auto w-full shrink-0 px-4 pb-4 pt-3 transition-[max-width] duration-300 sm:px-6 sm:pb-6 ${
@@ -289,7 +337,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
         {!account.me.emailVerified && <p className="px-6 pb-3 text-center text-[13px] text-muted">Verify your email before sending messages.</p>}
       </section>
 
-        <aside className={`${isPanelOpen ? "flex" : "hidden"} fixed inset-x-0 bottom-0 top-14 z-30 min-w-0 flex-col border-t border-line bg-paper md:top-0 xl:static xl:h-dvh xl:min-h-80 xl:border-l xl:border-t-0 xl:bg-line/20`}>
+        <aside className={`${isPanelOpen ? "flex" : "hidden"} fixed inset-x-0 bottom-0 top-14 z-30 min-w-0 flex-col border-t border-line bg-paper font-sans md:top-0 xl:static xl:h-dvh xl:min-h-80 xl:border-l xl:border-t-0 xl:bg-line/20`}>
           <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 text-[13px] sm:px-5">
             <div className="flex h-full items-center gap-5" role="tablist">
               {(["desktop", "context"] as const).map(tab => (
@@ -299,7 +347,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                   role="tab"
                   aria-selected={rightTab === tab}
                   onClick={() => setRightTab(tab)}
-                  className={`relative flex h-full items-center border-b-2 px-0.5 capitalize transition-colors duration-200 ${
+                  className={`relative flex h-full items-center border-b-2 px-0.5 font-sans font-medium capitalize transition-colors duration-200 ${
                     rightTab === tab ? "border-ink text-ink" : "border-transparent text-ink/50 hover:text-ink"
                   }`}>
                   {tab}
@@ -330,66 +378,67 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                 )
             ) : (
               <div className="text-[13px]">
-                <section className="px-5 py-5">
-                  <h2 className="text-[14px] font-medium text-ink">Project context</h2>
-                  <p className="mt-1.5 max-w-prose leading-5 text-ink/55">
-                    {project.description || project.name}
-                  </p>
+                <section className="px-5 py-4">
+                  <p className="leading-5 text-ink/55">Conversation and queued instructions attached to this session.</p>
+                </section>
+
+                <section className="border-t border-line/60 py-4">
+                  <div className="flex items-center justify-between px-5 pb-2">
+                    <h3 className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Conversation</h3>
+                    <span className="tabular-nums text-[11px] text-ink/40">{visibleMessages.length} messages</span>
+                  </div>
+                  {contextMessages.length > 0 ? (
+                    <ol>
+                      {contextMessages.map(message => (
+                        <li key={message.seq}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const target = contentRef.current?.querySelector<HTMLElement>(`[data-message-seq="${message.seq}"]`);
+                              target?.scrollIntoView({behavior: "smooth", block: "center"});
+                            }}
+                            className="group flex w-full gap-3 border-l-2 border-transparent px-5 py-2.5 text-left transition-colors hover:border-ink/20 hover:bg-line/25">
+                            <span className={`mt-1 size-1.5 shrink-0 rounded-full ${
+                              message.role === "user" ? "bg-[#5178ef]" : "bg-ink/25"
+                            }`} />
+                            <span className="min-w-0">
+                              <span className="block text-[11px] font-medium text-ink/45">
+                                {message.role === "user" ? "You" : "LotusBuild"}
+                              </span>
+                              <span className="mt-0.5 block max-h-10 overflow-hidden break-words leading-5 text-ink/80">
+                                {contextPreview(message.content)}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="px-5 py-2 text-ink/55">No conversation context yet.</p>
+                  )}
                 </section>
 
                 <section className="border-t border-line/60 px-5 py-5">
-                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Project</h3>
-                  <dl className="space-y-3">
-                    <div className="flex items-center justify-between gap-5">
-                      <dt className="text-ink/55">Platform</dt>
-                      <dd className="capitalize text-ink">{project.platform}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-5">
-                      <dt className="text-ink/55">Status</dt>
-                      <dd className="capitalize text-ink">{project.status}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-5">
-                      <dt className="text-ink/55">Created</dt>
-                      <dd className="text-ink">{new Date(project.createdAt).toLocaleDateString()}</dd>
-                    </div>
-                  </dl>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Instructions</h3>
+                    {queuedMessages.length > 0 && (
+                      <span className="tabular-nums text-[11px] text-ink/40">{queuedMessages.length} queued</span>
+                    )}
+                  </div>
+                  {queuedMessages.length > 0 ? (
+                    <ol className="space-y-3">
+                      {queuedMessages.map((message, index) => (
+                        <li key={message.id} className="flex gap-3">
+                          <span className="mt-0.5 text-[11px] tabular-nums text-ink/35">{String(index + 1).padStart(2, "0")}</span>
+                          <span className="whitespace-pre-wrap break-words leading-5 text-ink">{message.prompt}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="text-ink/55">No additional instructions are queued.</p>
+                  )}
                 </section>
 
-                {selected && (
-                  <section className="border-t border-line/60 px-5 py-5">
-                    <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Current session</h3>
-                    <dl className="space-y-3">
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Status</dt>
-                        <dd className="flex items-center gap-2 text-ink">
-                          <span className={`size-1.5 rounded-full ${
-                            selected.status === "RUNNING" ? "bg-emerald-500" :
-                            selected.status === "FAILED" ? "bg-accent" : "bg-ink/30"
-                          }`} />
-                          {STATUS_LABEL[selected.status]}
-                        </dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Model</dt>
-                        <dd className="max-w-[65%] truncate text-ink" title={selected.model}>{selected.model}</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Effort</dt>
-                        <dd className="capitalize text-ink">{selected.effort}</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Messages</dt>
-                        <dd className="text-ink">{selected.messageCount}</dd>
-                      </div>
-                      <div className="flex items-start justify-between gap-5">
-                        <dt className="text-ink/55">Sandbox</dt>
-                        <dd className="max-w-[65%] truncate font-mono text-[12px] text-ink" title={selected.sandboxId ?? undefined}>
-                          {selected.sandboxId ?? "Not started"}
-                        </dd>
-                      </div>
-                    </dl>
-                  </section>
-                )}
               </div>
             )}
           </div>

@@ -37,18 +37,24 @@ export function ThinkingReasoning({
 
   const expanded = active || open;
   const visibleItems = items.slice(-8);
+  const canExpand = visibleItems.length > 0;
+  const settledLabel = label !== "Worked"
+    ? label
+    : observedActive.current
+      ? `Worked for ${elapsedSeconds}s`
+      : "Worked";
 
   return (
     <div className={styles.root}>
       <button
         type="button"
-        className={`${styles.header} ${active ? "" : styles.clickable}`}
-        aria-expanded={expanded}
-        onClick={active ? undefined : () => setOpen(value => !value)}>
+        className={`${styles.header} ${!active && canExpand ? styles.clickable : ""}`}
+        aria-expanded={canExpand ? expanded : undefined}
+        onClick={!active && canExpand ? () => setOpen(value => !value) : undefined}>
         <span className={`${styles.label} ${active ? styles.shimmer : ""}`}>
-          {active ? label : observedActive.current ? `Worked for ${elapsedSeconds}s` : "Worked"}
+          {active ? label : settledLabel}
         </span>
-        {!active && (
+        {!active && canExpand && (
           <svg className={styles.chevron} viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
             <path d="m4.5 15.75 7.5-7.5 7.5 7.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
