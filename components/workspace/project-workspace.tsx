@@ -312,7 +312,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
           isStopping={isStopping}
           onStop={handleStop}
           announcement={acceptance}
-          error={sendError ?? selected?.error}
+          error={sendError}
           queuedCount={messagesId === selectedId ? queuedMessages.length : 0}
           models={allowedModels(account.me)}
           sessionModel={selected?.model}
