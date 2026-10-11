@@ -59,12 +59,16 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const latestUserIndex = visibleMessages.findLastIndex(message => message.role === "user");
   const history = latestUserIndex < 0 ? visibleMessages : visibleMessages.slice(0, latestUserIndex);
   const latestTurn = latestUserIndex < 0 ? [] : visibleMessages.slice(latestUserIndex);
-  const currentTask = latestUserIndex < 0 ? null : visibleMessages[latestUserIndex]?.content;
-  const renderMessage = (message: Message) => message.role === "user" ? (
-    <div key={message.seq} className="flex justify-end">
-      <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-[18px] bg-line/55 px-4 py-2.5 text-[14px] leading-6 text-ink">{message.content}</p>
+  const contextMessages = visibleMessages.slice(-10);
+  const renderMessage = (message: Message) => (
+    <div key={message.seq} data-message-seq={message.seq}>
+      {message.role === "user" ? (
+        <div className="flex justify-end">
+          <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-[18px] bg-line/55 px-4 py-2.5 text-[14px] leading-6 text-ink">{message.content}</p>
+        </div>
+      ) : <ChatMessage content={message.content} />}
     </div>
-  ) : <ChatMessage key={message.seq} content={message.content} />;
+  );
 
   // Keeps the view pinned to the newest content — new messages and, just as
   // important, a reply growing token-by-token while it streams in — so the
@@ -369,25 +373,75 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                 )
             ) : (
               <div className="text-[13px]">
-                <section className="px-5 py-5">
-                  <h2 className="text-[14px] font-medium text-ink">Conversation context</h2>
-                  <p className="mt-1.5 leading-5 text-ink/55">Information currently available to this session.</p>
+                <section className="px-5 pb-4 pt-5">
+                  <h2 className="text-[14px] font-medium text-ink">Context</h2>
+                  <p className="mt-1.5 leading-5 text-ink/55">The real conversation and instructions attached to this session.</p>
+                </section>
+
+                <section className="border-t border-line/60 py-4">
+                  <div className="flex items-center justify-between px-5 pb-2">
+                    <h3 className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Conversation</h3>
+                    <span className="tabular-nums text-[11px] text-ink/40">{visibleMessages.length} messages</span>
+                  </div>
+                  {contextMessages.length > 0 ? (
+                    <ol>
+                      {contextMessages.map(message => (
+                        <li key={message.seq}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const target = contentRef.current?.querySelector<HTMLElement>(`[data-message-seq="${message.seq}"]`);
+                              target?.scrollIntoView({behavior: "smooth", block: "center"});
+                            }}
+                            className="group flex w-full gap-3 border-l-2 border-transparent px-5 py-2.5 text-left transition-colors hover:border-ink/20 hover:bg-line/25">
+                            <span className={`mt-1 size-1.5 shrink-0 rounded-full ${
+                              message.role === "user" ? "bg-[#5178ef]" : "bg-ink/25"
+                            }`} />
+                            <span className="min-w-0">
+                              <span className="block text-[11px] font-medium text-ink/45">
+                                {message.role === "user" ? "You" : "LotusBuild"}
+                              </span>
+                              <span className="mt-0.5 line-clamp-2 block break-words leading-5 text-ink/80">
+                                {message.content}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="px-5 py-2 text-ink/55">No conversation context yet.</p>
+                  )}
                 </section>
 
                 <section className="border-t border-line/60 px-5 py-5">
-                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Current task</h3>
-                  <p className="whitespace-pre-wrap break-words leading-5 text-ink">
-                    {currentTask ?? "No task has been sent in this conversation."}
-                  </p>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Instructions</h3>
+                    {queuedMessages.length > 0 && (
+                      <span className="tabular-nums text-[11px] text-ink/40">{queuedMessages.length} queued</span>
+                    )}
+                  </div>
+                  {queuedMessages.length > 0 ? (
+                    <ol className="space-y-3">
+                      {queuedMessages.map((message, index) => (
+                        <li key={message.id} className="flex gap-3">
+                          <span className="mt-0.5 text-[11px] tabular-nums text-ink/35">{String(index + 1).padStart(2, "0")}</span>
+                          <span className="whitespace-pre-wrap break-words leading-5 text-ink">{message.prompt}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="text-ink/55">No additional instructions are queued.</p>
+                  )}
                 </section>
 
                 {selected && (
                   <section className="border-t border-line/60 px-5 py-5">
-                    <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Current session</h3>
-                    <dl className="space-y-3">
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Status</dt>
-                        <dd className="flex items-center gap-2 text-ink">
+                    <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Run</h3>
+                    <dl className="grid grid-cols-2 gap-x-5 gap-y-3">
+                      <div>
+                        <dt className="text-[11px] text-ink/45">Status</dt>
+                        <dd className="mt-1 flex items-center gap-2 text-ink">
                           <span className={`size-1.5 rounded-full ${
                             selected.status === "RUNNING" ? "bg-emerald-500" :
                             selected.status === "FAILED" ? "bg-accent" : "bg-ink/30"
@@ -395,33 +449,17 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
                           {STATUS_LABEL[selected.status]}
                         </dd>
                       </div>
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Model</dt>
-                        <dd className="max-w-[65%] truncate text-ink" title={selected.model}>{selected.model}</dd>
+                      <div>
+                        <dt className="text-[11px] text-ink/45">Effort</dt>
+                        <dd className="mt-1 capitalize text-ink">{selected.effort}</dd>
                       </div>
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Effort</dt>
-                        <dd className="capitalize text-ink">{selected.effort}</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-5">
-                        <dt className="text-ink/55">Messages</dt>
-                        <dd className="text-ink">{selected.messageCount}</dd>
+                      <div className="col-span-2">
+                        <dt className="text-[11px] text-ink/45">Model</dt>
+                        <dd className="mt-1 truncate text-ink" title={selected.model}>{selected.model}</dd>
                       </div>
                     </dl>
                   </section>
                 )}
-                <section className="border-t border-line/60 px-5 py-5">
-                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink/45">Queued follow-ups</h3>
-                  {queuedMessages.length > 0 ? (
-                    <ol className="space-y-3">
-                      {queuedMessages.map(message => (
-                        <li key={message.id} className="whitespace-pre-wrap break-words leading-5 text-ink">{message.prompt}</li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <p className="text-ink/55">No follow-ups are queued.</p>
-                  )}
-                </section>
               </div>
             )}
           </div>
