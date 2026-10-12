@@ -20,22 +20,35 @@ export type WorkspaceAccount =
 export function useWorkspaceAccount(): WorkspaceAccount {
   const [state, setState] = useState<WorkspaceAccount>({status: "loading"});
 
-  useEffect(
-    () =>
-      onAuthStateChanged(auth, async user => {
-        if (!user) {
-          setState({status: "signed-out"});
-          return;
-        }
+  useEffect(() => {
+    let generation = 0;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      const current = ++generation;
+      if (timer) clearInterval(timer);
+      if (!user) {
+        setState({status: "signed-out"});
+        return;
+      }
+      let inFlight = false;
+      const refresh = async (background = false) => {
+        if (inFlight) return;
+        inFlight = true;
         try {
           const me = await getMe(await user.getIdToken());
+          if (current !== generation) return;
           setState({status: "ready", user, me, username: usernameSlug(me.displayName, me.uid)});
         } catch {
-          setState({status: "error", message: "Could not load your account. Refresh the page to try again."});
-        }
-      }),
-    [],
-  );
+          if (current !== generation) return;
+          if (background) setState(previous => previous.status === 'ready' ? {...previous, me: {...previous.me, models: []}} : previous);
+          else setState({status: "error", message: "Could not load your account. Refresh the page to try again."});
+        } finally {inFlight = false;}
+      };
+      void refresh();
+      timer = setInterval(() => {void refresh(true);}, 60_000);
+    });
+    return () => {generation++; unsubscribe(); if (timer) clearInterval(timer);};
+  }, []);
 
   return state;
 }

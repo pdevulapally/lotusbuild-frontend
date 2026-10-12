@@ -3,10 +3,12 @@ import type {Activity} from "../../lib/workspace/activity";
 import {ChatMessage} from "./chat-message";
 import {ThinkingReasoning} from "../ai-elements/thinking-reasoning";
 
-export function ActivityView({state, status, connection, onReconnect}: {
+export function ActivityView({state, status, connection, onReconnect, persistedReply, sessionError}: {
   state: Activity; status: SessionStatus;
   connection: "connecting" | "connected" | "disconnected" | "unauthorized";
   onReconnect: () => void;
+  persistedReply?: string;
+  sessionError?: string | null;
 }) {
   const live = status === "QUEUED" || status === "RUNNING";
   const failed = status === "FAILED" || state.phase === "failed";
@@ -21,7 +23,7 @@ export function ActivityView({state, status, connection, onReconnect}: {
   return (
     <div className="flex min-w-0 flex-col gap-5">
       {label && (
-        <ThinkingReasoning active={live && !failed} label={label} items={entries} />
+        <ThinkingReasoning active={live && !failed && state.phase !== 'finished'} label={label} items={entries} startedAt={state.startedAt} finishedAt={state.finishedAt} />
       )}
       {!live && state.save !== "unknown" && <p className={`text-[12px] ${state.save === "failed" ? "text-accent" : "text-muted"}`}>
         {state.save === "saved" ? "Project changes saved" : "Project save failed"}
@@ -29,7 +31,8 @@ export function ActivityView({state, status, connection, onReconnect}: {
       {connection === "disconnected" && <button type="button" onClick={() => onReconnect()} className="w-fit text-[12px] text-muted underline">Reconnect activity</button>}
       {connection === "unauthorized" && <p className="text-[12px] text-muted">Sign in again to restore activity access.</p>}
       {state.save === "failed" && <p role="alert" className="text-accent">Project save failed.</p>}
-      {live && state.text && <ChatMessage content={state.text} streaming />}
+      {failed && <p role="alert" className="max-w-xl text-[13px] leading-6 text-ink/70">{state.error ?? sessionError ?? 'The session stopped before it could finish. Start a new session to try again.'}</p>}
+      {state.text && (state.phase !== 'finished' || persistedReply?.replace(/\s/g, '') !== state.text.replace(/\s/g, '')) && <ChatMessage content={state.text} streaming={live && state.phase !== 'finished'} />}
     </div>
   );
 }

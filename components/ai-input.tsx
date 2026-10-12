@@ -1,6 +1,6 @@
 'use client';
 
-import {useRef, useState, useSyncExternalStore} from 'react';
+import {useEffect, useId, useRef, useState, useSyncExternalStore} from 'react';
 import {
   ChatComposer,
   ChatComposerInput,
@@ -11,8 +11,55 @@ import {
 import type {CSSProperties} from 'react';
 import {IconArrowUp, IconLoader2, IconPlayerStop} from '@tabler/icons-react';
 import type {AiEffort, SessionMode} from '@/lib/api/sessions';
+import type {AgentModel} from '@/lib/api/me';
 
 export type AiInputOptions = {effort?: AiEffort; mode: SessionMode};
+
+type PickerOption = {value: string; label: string; description: string};
+
+function ComposerSelect({label, value, options, onChange}: {
+  label: string; value: string; options: PickerOption[]; onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const id = useId();
+  useEffect(() => {
+    if (open) menu.current?.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
+  }, [open]);
+  const close = () => {setOpen(false); trigger.current?.focus();};
+  return <div className="relative min-w-0" onBlur={event => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+  }} onKeyDown={event => {
+    if (event.key === 'Escape') {event.preventDefault(); close();}
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    if (!open) {setOpen(true); return;}
+    const buttons = [...(menu.current?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]') ?? [])];
+    const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
+      (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
+    buttons[next]?.focus();
+  }}>
+    <button ref={trigger} type="button" aria-label={label} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined}
+      onClick={() => setOpen(current => !current)}
+      className={`flex max-w-52 items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/40 ${open ? 'bg-ink/5 text-ink' : 'text-ink/65 hover:bg-ink/5 hover:text-ink'}`}>
+      <span className="truncate">{options.find(option => option.value === value)?.label ?? value}</span>
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"
+        className={`shrink-0 text-ink/40 transition-transform motion-reduce:transition-none ${open ? 'rotate-180' : ''}`}><path d="M2.25 3.75 5 6.5l2.75-2.75" /></svg>
+    </button>
+    {open && <div id={id} ref={menu} role="menu" aria-label={label}
+      className="absolute bottom-full left-0 z-40 mb-2 max-h-80 w-72 max-w-[calc(100vw-3rem)] overflow-y-auto rounded-2xl border border-line/80 bg-paper p-1.5 shadow-[0_12px_40px_-12px_rgba(38,38,38,0.25)]">
+      <p className="px-3 pb-2 pt-2 text-[11px] font-medium text-muted">{label}</p>
+      {options.map(option => <button key={option.value} type="button" role="menuitemradio" aria-checked={option.value === value}
+        onClick={() => {onChange(option.value); close();}}
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-ink/75 transition-colors hover:bg-line/35 focus:bg-line/45 focus:outline-none aria-checked:bg-line/45 aria-checked:text-ink">
+        <span className="min-w-0 flex-1"><span className="block text-[13px] font-medium">{option.label}</span><span className="mt-0.5 block text-[11px] leading-4 text-muted">{option.description}</span></span>
+        {option.value === value && <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="m2.5 7.5 3 3 6-6.5" /></svg>}
+      </button>)}
+    </div>}
+  </div>;
+}
 
 function modelLabel(model: string): string {
   return model
@@ -25,143 +72,7 @@ function modelLabel(model: string): string {
     .replace(/(\d) (\d)/g, '$1.$2');
 }
 
-// The options are supplied by the authenticated account's backend capability
-// allowlist. The picker only presents that catalogue; it never invents models.
-function ModelSelect({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
 
-  return (
-    <div
-      className="relative"
-      onBlur={event => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
-      }}
-      onKeyDown={event => {
-        if (event.key === 'Escape') setIsOpen(false);
-      }}>
-      <button
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen(open => !open)}
-        className="group flex max-w-52 items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px] font-medium text-ink/65 transition-colors duration-150 hover:bg-ink/5 hover:text-ink">
-        <span className="truncate">{modelLabel(value)}</span>
-        <svg
-          aria-hidden="true"
-          width="10"
-          height="10"
-          viewBox="0 0 10 10"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`shrink-0 text-ink/45 transition-transform duration-150 group-hover:text-ink/70 ${isOpen ? 'rotate-180' : ''}`}>
-          <path d="M2.25 3.75 5 6.5l2.75-2.75" />
-        </svg>
-      </button>
-
-      {isOpen && (
-        <ul
-          role="listbox"
-          aria-label="Agent model"
-          className="absolute bottom-full left-0 z-20 mb-2 w-72 overflow-hidden rounded-xl border border-line/80 bg-paper p-1.5 shadow-[0_18px_50px_-18px_rgba(38,38,38,0.4)]">
-          <li aria-hidden="true" className="px-2.5 pb-2 pt-1.5">
-            <p className="text-[12px] font-semibold text-ink">Select model</p>
-            <p className="mt-0.5 text-[11px] leading-4 text-muted">Available to your account</p>
-          </li>
-          {options.map(option => {
-            const selected = option === value;
-            return (
-              <li key={option} role="option" aria-selected={selected}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(option);
-                    setIsOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between gap-4 rounded-lg px-2.5 py-2 text-left transition-colors duration-150 ${
-                    selected ? 'bg-line/55 text-ink' : 'text-ink/70 hover:bg-line/35 hover:text-ink'
-                  }`}>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="truncate text-[13px] font-medium">{modelLabel(option)}</span>
-                    <span className="truncate text-[10px] text-muted">{option}</span>
-                  </span>
-                  {selected && (
-                    <svg
-                      aria-hidden="true"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 14 14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="shrink-0">
-                      <path d="M2.5 7.5l3 3 6-6.5" />
-                    </svg>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function ModeSelect({value, onChange}: {value: SessionMode; onChange: (value: SessionMode) => void}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const descriptions: Record<SessionMode, string> = {
-    build: 'Edit files, run tools, and build the project',
-    plan: 'Inspect the project and return a read-only plan',
-  };
-
-  return (
-    <div className="relative" onBlur={event => {
-      if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
-    }} onKeyDown={event => {
-      if (event.key === 'Escape') setIsOpen(false);
-    }}>
-      <button type="button" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setIsOpen(open => !open)}
-        className="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px] font-medium capitalize text-ink/65 hover:bg-ink/5 hover:text-ink">
-        {value}
-        <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
-          strokeLinecap="round" strokeLinejoin="round" className={`text-ink/45 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
-          <path d="M2.25 3.75 5 6.5l2.75-2.75" />
-        </svg>
-      </button>
-      {isOpen && (
-        <ul role="listbox" aria-label="Session mode"
-          className="absolute bottom-full left-0 z-20 mb-2 w-72 rounded-xl border border-line/80 bg-paper p-1.5 shadow-[0_18px_50px_-18px_rgba(38,38,38,0.4)]">
-          {(['build', 'plan'] as const).map(option => (
-            <li key={option} role="option" aria-selected={value === option}>
-              <button type="button" onClick={() => {onChange(option); setIsOpen(false);}}
-                className={`flex w-full flex-col rounded-lg px-2.5 py-2 text-left ${
-                  value === option ? 'bg-line/55 text-ink' : 'text-ink/70 hover:bg-line/35 hover:text-ink'
-                }`}>
-                <span className="text-[13px] font-medium capitalize">{option}</span>
-                <span className="text-[11px] leading-4 text-muted">{descriptions[option]}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-// LotusBuild palette (matches app/globals.css) applied to the composer's tokens.
 const composerTheme = {
   '--color-background-popover': '#f7f5f3',
   '--color-background-surface': '#f7f5f3',
@@ -175,8 +86,6 @@ const composerTheme = {
   '--_chat-composer-radius': '24px',
 } as CSSProperties;
 
-// Same palette, translucent — for placing the composer over a photo (its
-// backdrop-blur needs a see-through background to actually blur anything).
 const glassTheme = {
   ...composerTheme,
   '--color-background-popover': 'rgba(247, 245, 243, 0.86)',
@@ -192,6 +101,7 @@ type AiInputProps = {
   placeholder?: string;
   onSubmit?: (value: string, model: string, options: AiInputOptions) => boolean | void | Promise<boolean | void>;
   models?: string[];
+  modelOptions?: AgentModel[];
   sessionModel?: string;
   effort?: string;
   effortOptions?: AiEffort[];
@@ -226,6 +136,7 @@ export function AiInput({
   error,
   queuedCount = 0,
   models = [],
+  modelOptions,
   sessionModel,
   effort,
   effortOptions = [],
@@ -243,6 +154,9 @@ export function AiInput({
   const [chosenEffort, setEffort] = useState<AiEffort | undefined>(effortOptions.at(-1));
   const [chosenMode, setMode] = useState<SessionMode>('build');
   const model = sessionModel ?? (models.includes(chosenModel) ? chosenModel : models[0] ?? '');
+  const availableEfforts = modelOptions ? modelOptions.find(option => option.id === model)?.efforts ?? [] : effortOptions;
+  const selectedEffort = chosenEffort && availableEfforts.includes(chosenEffort) ? chosenEffort : availableEfforts.at(-1);
+  const displayModel = (id: string) => modelOptions?.find(option => option.id === id)?.name ?? modelLabel(id);
   const submitting = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -255,7 +169,7 @@ export function AiInput({
     try {
       if (await onSubmit(text, model, {
         mode: sessionMode ?? chosenMode,
-        ...(sessionMode || effort ? {} : {effort: chosenEffort}),
+        ...(sessionMode || effort || selectedEffort === undefined ? {} : {effort: selectedEffort}),
       }) !== false) setValue('');
     } catch {
       setSubmitError('Could not confirm delivery. Check the conversation before sending again.');
@@ -299,19 +213,21 @@ export function AiInput({
           }}
           style={{minHeight: compact ? 56 : 96, maxHeight: 200, overflowY: 'auto'}} />}
         footerActions={
-          <div className="flex min-w-0 items-center gap-1.5">
-          {sessionModel ? <span className="max-w-48 truncate rounded-lg px-2 py-1.5 text-[12px] font-medium text-ink/60" title={sessionModel}>{modelLabel(sessionModel)}</span> :
-          models.length > 0 ? <ModelSelect value={model} options={models} onChange={setModel} /> :
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
+          {sessionModel ? <span className="max-w-48 truncate rounded-lg px-2 py-1.5 text-[12px] font-medium text-ink/60" title={sessionModel}>{displayModel(sessionModel)}</span> :
+          models.length > 0 ? <ComposerSelect label="Agent model" value={model} options={models.map(id => ({value: id, label: displayModel(id), description: modelOptions?.find(option => option.id === id)?.efforts.length ? 'Adjustable reasoning · Available to your account' : 'Default reasoning · Available to your account'}))} onChange={setModel} /> :
           <span className="text-[12px] text-muted">{allowUnconfiguredSubmit ? "Sign in to choose a model" : "Available models could not be loaded."}</span>}
-          {effort && <span className="shrink-0 rounded-lg px-2 py-1.5 text-[12px] capitalize text-ink/45" title="Reasoning effort is set by your plan">{effort} effort</span>}
+          {effort && <span className="shrink-0 rounded-lg px-2 py-1.5 text-[12px] capitalize text-ink/45" title="This session's reasoning setting">{availableEfforts.length > 0 ? `${effort} effort` : 'Default reasoning'}</span>}
           {sessionMode && <span className="shrink-0 rounded-lg px-2 py-1.5 text-[12px] capitalize text-ink/45">{sessionMode}</span>}
-          {sessionControls && !sessionMode && <ModeSelect value={chosenMode} onChange={setMode} />}
-          {sessionControls && !effort && effortOptions.length > 0 && (
-            <select aria-label="Reasoning effort" value={chosenEffort} onChange={event => setEffort(event.target.value as AiEffort)}
-              className="rounded-lg bg-transparent px-1 py-1.5 text-[12px] capitalize text-ink/60 outline-none">
-              {effortOptions.map(option => <option key={option} value={option}>{option} effort</option>)}
-            </select>
-          )}
+          {sessionControls && !sessionMode && <ComposerSelect label="Session mode" value={chosenMode} onChange={value => setMode(value as SessionMode)} options={[
+            {value: 'build', label: 'Build', description: 'Edit files, run tools, and build your project'},
+            {value: 'plan', label: 'Plan', description: 'Explore the project and return a read-only plan'},
+          ]} />}
+          {sessionControls && !effort && selectedEffort && <ComposerSelect label="Reasoning effort" value={selectedEffort} onChange={value => setEffort(value as AiEffort)}
+            options={availableEfforts.map(value => ({value, label: `${value[0].toUpperCase()}${value.slice(1)} effort`, description: {
+              low: 'Prioritize speed and lower token usage', standard: 'Balance depth, speed, and token usage',
+              high: 'More thorough reasoning for complex tasks', xhigh: 'Deep reasoning for the most demanding tasks',
+            }[value]}))} />}
           {queuedCount > 0 && <span className="shrink-0 text-[12px] text-muted">{queuedCount} queued</span>}
           </div>
         }

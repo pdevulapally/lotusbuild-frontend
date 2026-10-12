@@ -10,10 +10,12 @@ import type {SessionStatus} from "@/lib/api/sessions";
 import {initialActivity, reduceActivity} from "@/lib/workspace/activity";
 import {ActivityView} from "./activity-view";
 
-export function SessionActivity({sessionId, status, onEvent}: {
+export function SessionActivity({sessionId, status, onEvent, persistedReply, sessionError}: {
   sessionId: string;
   status: SessionStatus;
   onEvent: (event?: SessionEvent) => void;
+  persistedReply?: string;
+  sessionError?: string | null;
 }) {
   const [state, dispatch] = useReducer(reduceActivity, initialActivity);
   const [connection, setConnection] = useState<"connecting" | "connected" | "disconnected" | "unauthorized">("connecting");
@@ -26,6 +28,13 @@ export function SessionActivity({sessionId, status, onEvent}: {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let attempts = 0;
     let refreshToken = false;
+    let pendingText: SessionEvent | undefined;
+    let animation: number | undefined;
+    const flushText = () => {
+      if (animation !== undefined) cancelAnimationFrame(animation);
+      animation = undefined;
+      if (pendingText) {dispatch(pendingText); pendingText = undefined;}
+    };
     const connect = async () => {
       if (controller.signal.aborted) return;
       setConnection("connecting");
@@ -35,7 +44,10 @@ export function SessionActivity({sessionId, status, onEvent}: {
         await readSessionEvents(token, sessionId, controller.signal, event => {
           cursor.current = event.id;
           attempts = 0;
-          dispatch(event);
+          if (event.type === 'agent.text' && typeof event.data.delta === 'string') {
+            pendingText = {...event, data: {delta: String(pendingText?.data.delta ?? '') + event.data.delta}};
+            if (animation === undefined) animation = requestAnimationFrame(flushText);
+          } else {flushText(); dispatch(event);}
           if (event.type.startsWith("session.") || event.type === "agent.finished" || event.type.startsWith("desktop.") || event.type === "preview.ready") notify(event);
         }, () => {
           if (controller.signal.aborted) return;
@@ -54,9 +66,8 @@ export function SessionActivity({sessionId, status, onEvent}: {
       }
     };
     void connect();
-    return () => { controller.abort(); if (timer) clearTimeout(timer); };
+    return () => { controller.abort(); if (timer) clearTimeout(timer); if (animation !== undefined) cancelAnimationFrame(animation); };
   }, [sessionId, retry]);
 
-  return <ActivityView state={state} status={status} connection={connection} onReconnect={() => setRetry(value => value + 1)} />;
+  return <ActivityView state={state} status={status} connection={connection} persistedReply={persistedReply} sessionError={sessionError} onReconnect={() => setRetry(value => value + 1)} />;
 }
-
