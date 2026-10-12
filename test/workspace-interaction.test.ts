@@ -33,6 +33,15 @@ test("desktop tickets stay on the configured secure origin and exact session pat
   assert.throws(() => desktopSocketUrl("https://api.example.test", "s", {...ticket, expiresInSeconds: 0}));
 });
 
+test("streamed responses survive completion until the durable reply has loaded", () => {
+  const text = reduceActivity(initialActivity, event('agent.text', {delta: 'Reply ready'}));
+  const finished = reduceActivity(text, event('agent.finished'));
+  const render = (persistedReply?: string) => renderToStaticMarkup(createElement(ActivityView, {state: finished, status: 'IDLE', connection: 'connected', onReconnect() {}, persistedReply}));
+  assert.match(render(), /Reply ready/);
+  assert.match(render('An older reply'), /Reply ready/);
+  assert.doesNotMatch(render('Reply ready'), /Reply ready/);
+});
+
 test("composer keeps pending progress in its button, preserves a failed draft, and prevents duplicate writes", async () => {
   const dom = new JSDOM('<div id="root"></div>', {url: "http://localhost", pretendToBeVisual: true});
   const globals = globalThis as unknown as Record<string, unknown>;
@@ -68,14 +77,39 @@ test("composer keeps pending progress in its button, preserves a failed draft, a
   await act(async () => root.render(createElement(AiInput, {key: "controls", label: "Test controls", sessionModel: undefined,
     models: ["model"], effortOptions: ["low", "standard", "high"], sessionControls: true, compact: true,
     onSubmit: async (_text: string, _model: string, options: unknown) => {submittedOptions = options;}})));
-  const modeButton = [...rootElement.querySelectorAll("button")].find(button => button.textContent?.trim() === "build") as HTMLElement;
+  const modeButton = rootElement.querySelector('button[aria-label="Session mode"]') as HTMLElement;
   await act(async () => modeButton.click());
-  const planButton = [...rootElement.querySelectorAll('[role="option"] button')].find(button => button.textContent?.includes("plan")) as HTMLElement;
+  const planButton = [...rootElement.querySelectorAll('[role="menuitemradio"]')].find(button => button.textContent?.startsWith("Plan")) as HTMLElement;
   await act(async () => planButton.click());
   const controlledTextbox = rootElement.querySelector('[role="textbox"]') as HTMLElement;
   await act(async () => {controlledTextbox.textContent = "Plan it"; controlledTextbox.dispatchEvent(new dom.window.Event("input", {bubbles: true}));});
   await act(async () => (rootElement.querySelector('button[aria-label="Send"]') as HTMLElement).click());
   assert.deepEqual(submittedOptions, {mode: "plan", effort: "high"});
+  const modelOptions = [{id: 'native', name: 'Native reasoning model', efforts: [], maxOutputTokens: 8192},
+    {id: 'adjustable', name: 'Adjustable reasoning model', efforts: ['low', 'standard'] as ('low' | 'standard')[], maxOutputTokens: 8192}];
+  await act(async () => root.render(createElement(AiInput, {key: 'dynamic', label: 'Dynamic controls',
+    models: ['native', 'adjustable'], modelOptions, sessionControls: true, compact: true,
+    onSubmit: async (_text, _model, options) => {submittedOptions = options;}})));
+  assert.match(rootElement.textContent ?? '', /Native reasoning model/);
+  assert.equal(rootElement.querySelector('button[aria-label="Reasoning effort"]'), null);
+  const nativeTextbox = rootElement.querySelector('[role="textbox"]') as HTMLElement;
+  await act(async () => {nativeTextbox.textContent = 'Build it'; nativeTextbox.dispatchEvent(new dom.window.Event('input', {bubbles: true}));});
+  await act(async () => (rootElement.querySelector('button[aria-label="Send"]') as HTMLElement).click());
+  assert.deepEqual(submittedOptions, {mode: 'build'});
+  await act(async () => (rootElement.querySelector('button[aria-label="Agent model"]') as HTMLElement).click());
+  assert.equal(dom.window.document.activeElement?.getAttribute('aria-checked'), 'true');
+  await act(async () => dom.window.document.activeElement?.dispatchEvent(new dom.window.KeyboardEvent('keydown', {key: 'ArrowDown', bubbles: true, cancelable: true})));
+  assert.match(dom.window.document.activeElement?.textContent ?? '', /Adjustable reasoning model/);
+  await act(async () => (dom.window.document.activeElement as HTMLElement).click());
+  assert.match(rootElement.querySelector('button[aria-label="Reasoning effort"]')?.textContent ?? '', /Standard effort/);
+  await act(async () => (rootElement.querySelector('button[aria-label="Reasoning effort"]') as HTMLElement).click());
+  await act(async () => dom.window.document.activeElement?.dispatchEvent(new dom.window.KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true})));
+  assert.equal(dom.window.document.activeElement?.getAttribute('aria-label'), 'Reasoning effort');
+  assert.equal(rootElement.querySelector('[role="menu"]'), null);
+  const adjustableTextbox = rootElement.querySelector('[role="textbox"]') as HTMLElement;
+  await act(async () => {adjustableTextbox.textContent = 'Reason carefully'; adjustableTextbox.dispatchEvent(new dom.window.Event('input', {bubbles: true}));});
+  await act(async () => (rootElement.querySelector('button[aria-label="Send"]') as HTMLElement).click());
+  assert.deepEqual(submittedOptions, {mode: 'build', effort: 'standard'});
   let stops = 0;
   await act(async () => root.render(createElement(AiInput, {key: "failure", label: "Test composer", sessionModel: "model", compact: true,
     isWorking: true, queuedCount: 2, onStop: () => {stops++;}, onSubmit: async () => {throw new Error("Uncertain response");}})));

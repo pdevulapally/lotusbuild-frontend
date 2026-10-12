@@ -2,7 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {parseEventFrame, readSessionEvents} from "../lib/api/session-events";
 import {initialActivity, reduceActivity} from "../lib/workspace/activity";
-import {allowedModels} from "../lib/api/me";
+import {allowedEfforts, allowedModels, type Me} from "../lib/api/me";
 import {parseFollowUpResponse, sendFollowUp} from "../lib/api/sessions";
 import {startBuild, BuildStartError} from "../lib/api/build";
 import {apiRequest, ApiError} from "../lib/api/client";
@@ -55,7 +55,7 @@ test("completion, save, cancellation and failed tools remain separate", () => {
   state = reduceActivity(state, event("agent.finished"));
   assert.equal(state.phase, "finished");
   assert.equal(state.save, "unknown");
-  assert.equal(state.text, "");
+  assert.equal(state.text, "reply");
   state = reduceActivity(state, event("project.save_failed"));
   assert.equal(state.save, "failed");
   state = reduceActivity(state, event("session.running"));
@@ -65,9 +65,9 @@ test("completion, save, cancellation and failed tools remain separate", () => {
   assert.equal(reduceActivity(state, event("desktop.ready")).save, "unknown");
 });
 
-test("only account-supplied models are offered; missing/unrestricted allowlists have no guessed models", () => {
+test("raw allowlists cannot invent provider capabilities when metadata is unavailable", () => {
   const me = {uid: "u", email: "e", emailVerified: true, displayName: null, plan: {key: "free", name: "Free"}, capabilities: [{key: "ai.model.allowlist", kind: "stringList", value: ["model-a", "model-a"]}]};
-  assert.deepEqual(allowedModels(me), ["model-a"]);
+  assert.deepEqual(allowedModels(me), []);
   assert.deepEqual(allowedModels({...me, capabilities: []}), []);
   assert.deepEqual(allowedModels({...me, capabilities: [{...me.capabilities[0], value: []}]}), []);
 });
@@ -77,6 +77,36 @@ test("reasoning effort options stop at the backend entitlement ceiling", async (
   const base = {uid: "u", email: "u@example.com", emailVerified: true, displayName: null, plan: {key: "pro", name: "Pro"}};
   assert.deepEqual(allowedEfforts({...base, capabilities: [{key: "ai.effort", kind: "string", value: "high"}]}), ["low", "standard", "high"]);
   assert.deepEqual(allowedEfforts({...base, capabilities: [{key: "ai.effort", kind: "string", value: "unknown"}]}), []);
+});
+
+test("provider descriptors drive models and effort choices intersect the account ceiling", () => {
+  const me: Me = {uid: 'u', email: 'e', emailVerified: true, displayName: null, plan: {key: 'pro', name: 'Pro'},
+    capabilities: [{key: 'ai.effort', kind: 'string', value: 'standard'}], models: [
+      {id: 'native', name: 'Native model', efforts: [], maxOutputTokens: 8192},
+      {id: 'adjustable', name: 'Adjustable model', efforts: ['low', 'standard', 'high'], maxOutputTokens: 8192},
+    ]};
+  assert.deepEqual(allowedModels(me), ['native', 'adjustable']);
+  assert.deepEqual(allowedEfforts(me, 'native'), []);
+  assert.deepEqual(allowedEfforts(me, 'adjustable'), ['low', 'standard']);
+  assert.deepEqual(allowedEfforts(me, 'missing'), []);
+  assert.deepEqual(allowedModels({...me, models: []}), []);
+});
+
+test("parallel tools correlate by call id instead of guessing completion order", () => {
+  const events = [event('session.running'),
+    event('agent.tool_call', {name: 'read_file', callId: 'a', input: {path: 'a.ts'}}),
+    {...event('agent.tool_call', {name: 'read_file', callId: 'b', input: {path: 'b.ts'}}), id: '2-0'},
+    event('agent.tool_result', {name: 'read_file', callId: 'b', isError: false, text: 'B complete'}),
+  ];
+  const state = events.reduce(reduceActivity, initialActivity);
+  assert.equal(state.entries.length, 2);
+  assert.equal(state.entries[0].running, true);
+  assert.equal(state.entries[1].running, false);
+  assert.equal(state.entries[1].output, 'B complete');
+  assert.equal(state.currentAction, 'Reading file');
+  const finished = reduceActivity(state, event('agent.tool_result', {name: 'read_file', callId: 'a', isError: true, text: 'Read failed'}));
+  assert.equal(finished.entries[0].failed, true);
+  assert.equal(finished.currentAction, null);
 });
 
 test("distinct follow-up acceptance responses are checked, invalid responses fail", () => {

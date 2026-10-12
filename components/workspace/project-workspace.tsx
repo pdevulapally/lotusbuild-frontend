@@ -11,7 +11,7 @@ import {requireIdToken} from "@/lib/firebase/token";
 import type {Project} from "@/lib/api/projects";
 import {cancelSession, createSession, listMessages, listQueuedMessages, listSessions, sendFollowUp, type QueuedMessage, type Message, type Session} from "@/lib/api/sessions";
 import {ApiError} from "@/lib/api/client";
-import {allowedEfforts, allowedModels} from "@/lib/api/me";
+import {allowedModels} from "@/lib/api/me";
 import type {AiInputOptions} from "@/components/ai-input";
 import type {SessionEvent} from "@/lib/api/session-events";
 import type {WorkspaceAccount} from "@/lib/workspace/use-account";
@@ -47,7 +47,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
   const [isStopping, setIsStopping] = useState(false);
   const [rightTab, setRightTab] = useState<"desktop" | "context">("desktop");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [viewerEnabled, setViewerEnabled] = useState(true);
+  const [viewerEnabled, setViewerEnabled] = useState(false);
   const [desktop, setDesktop] = useState<{sessionId: string; ended: boolean; revision: number} | null>(null);
   const [showJump, setShowJump] = useState(false);
   const [chatScrollable, setChatScrollable] = useState(false);
@@ -204,7 +204,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
         setIsPanelOpen(true);
       }
     }
-    if (!event && selectedId) setDesktop(current => ({sessionId: selectedId, ended: false, revision: (current?.revision ?? 0) + 1}));
+    if (!event && selectedId) setDesktop(current => current?.sessionId === selectedId && !current.ended ? {...current, revision: current.revision + 1} : current);
     if (event && ["agent.finished", "session.idle", "session.failed"].includes(event.type)) {
       setAcceptance(null);
       setIsStopping(false);
@@ -212,6 +212,8 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
     // Reconcile from durable APIs rather than trusting expired/replayed lifecycle events.
     if (!event || ["agent.finished", "session.idle", "session.failed", "session.running", "session.queued", "session.message_queued"].includes(event.type)) refresh();
   }, [refresh, selectedId]);
+
+  useEffect(() => {setViewerEnabled(false); setDesktop(null);}, [selectedId]);
 
   return (
     <div
@@ -279,7 +281,7 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
             {history.map(renderMessage)}
             <div className="flex flex-col gap-5">
               {latestTurn.filter(message => message.role === "user").map(renderMessage)}
-              {selected && <SessionActivity key={selected.id} sessionId={selected.id} status={selected.status} onEvent={handleEvent} />}
+              {selected && <SessionActivity key={selected.id} sessionId={selected.id} status={selected.status} sessionError={selected.error} persistedReply={latestTurn.findLast(message => message.role === 'assistant')?.content} onEvent={handleEvent} />}
               {latestTurn.filter(message => message.role === "assistant").map(renderMessage)}
             </div>
             {messagesId === selectedId && queuedMessages.map(message => (
@@ -327,9 +329,9 @@ export function ProjectWorkspace({account, project}: {account: ReadyAccount; pro
           error={sendError}
           queuedCount={messagesId === selectedId ? queuedMessages.length : 0}
           models={allowedModels(account.me)}
+          modelOptions={account.me.models ?? []}
           sessionModel={selected?.model}
           effort={selected?.effort}
-          effortOptions={allowedEfforts(account.me)}
           sessionMode={selected?.mode}
           sessionControls={!selected}
           isDisabled={sessions === null || Boolean(loadError) || Boolean(selectedId && messagesId !== selectedId) || !account.me.emailVerified || isStopping && active}

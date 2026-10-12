@@ -8,7 +8,7 @@ import {useToast} from "@astryxdesign/core/Toast";
 import {AiInput} from "@/components/ai-input";
 import {BuildStartError, startBuild} from "@/lib/api/build";
 import Link from "next/link";
-import {allowedEfforts, allowedModels} from "@/lib/api/me";
+import {allowedModels} from "@/lib/api/me";
 import type {AiInputOptions} from "@/components/ai-input";
 import {ApiError} from "@/lib/api/client";
 import {workspacePath} from "@/lib/workspace/slug";
@@ -76,7 +76,7 @@ export function WorkspaceHome({account}: {account: ReadyAccount}) {
           label="Describe what you want to build"
           onSubmit={handleSubmit}
           models={allowedModels(account.me)}
-          effortOptions={allowedEfforts(account.me)}
+          modelOptions={account.me.models ?? []}
           sessionControls
           isDisabled={isSubmitting}
           variant="glass"

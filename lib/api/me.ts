@@ -1,4 +1,7 @@
 import {apiRequest} from "./client";
+import type {AiEffort} from "./sessions";
+
+export type AgentModel = {id: string; name: string; efforts: AiEffort[]; maxOutputTokens: number};
 
 // The fields the sign-in page shows. Source: GET /me in the backend's server.ts.
 export type Me = {
@@ -8,23 +11,22 @@ export type Me = {
   displayName: string | null;
   plan: {key: string; name: string};
   capabilities: {key: string; kind: string; value: unknown}[];
+  models?: AgentModel[];
 };
 
 export function allowedModels(me: Me): string[] {
-  const capability = me.capabilities?.find(item => item.key === "ai.model.allowlist");
-  if (capability?.kind !== "stringList" || !Array.isArray(capability.value) ||
-      !capability.value.every(value => typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(value))) return [];
-  // An unrestricted allowlist does not supply a model catalogue. Do not invent one.
-  return [...new Set(capability.value as string[])];
+  return [...new Set(me.models?.map(model => model.id) ?? [])];
 }
 
 const AI_EFFORTS = ["low", "standard", "high", "xhigh"] as const;
 
-export function allowedEfforts(me: Me): (typeof AI_EFFORTS)[number][] {
+export function allowedEfforts(me: Me, model?: string): (typeof AI_EFFORTS)[number][] {
   const capability = me.capabilities?.find(item => item.key === "ai.effort");
   if (capability?.kind !== "string" || typeof capability.value !== "string") return [];
   const maximum = AI_EFFORTS.indexOf(capability.value as (typeof AI_EFFORTS)[number]);
-  return maximum < 0 ? [] : AI_EFFORTS.slice(0, maximum + 1);
+  const permitted = maximum < 0 ? [] : AI_EFFORTS.slice(0, maximum + 1);
+  if (model === undefined) return permitted;
+  return permitted.filter(effort => me.models?.find(item => item.id === model)?.efforts.includes(effort));
 }
 
 // Requires a Firebase ID token. The backend verifies it on every call.
